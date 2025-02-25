@@ -20,7 +20,7 @@ export function TaskNodeDetails({ isExpanded, data }: TaskNodeDetailsProps) {
   }
 
   return (
-    <div className="space-y-6 pt-6 mt-6 border-t border-[hsl(var(--border))]">
+    <div className="space-y-6 pt-6 mt-6 border-t border-[hsl(var(--border))] details-section">
       {data.isSubWorkflowTask && data.subWorkflowId && (
         <div className="mb-4">
           <button

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   Settings,
   Zap,
@@ -22,11 +22,7 @@ export function useTaskNode(data: TaskNodeData) {
   console.log("Node ID for state tracking:", nodeId);
   console.log("Current expansion state:", isExpanded);
 
-  // Force expanded state to true for testing
-  useEffect(() => {
-    console.log("Setting initial expanded state to true for testing");
-    setIsExpanded(true);
-  }, []);
+  // Removed forced expanded state for testing
 
   const taskType = useMemo(() => {
     if (!data.action?.ref) {

@@ -24,35 +24,7 @@ export function TaskNode({ data }: { data: TaskNodeData }) {
     console.log("New expanded state:", !isExpanded);
   };
 
-  // Force transitions for testing if none exist
-  if (!data.next || data.next.length === 0) {
-    console.log("Adding test transitions for debugging");
-    data.next = [
-      {
-        when: "{{ SUCCEEDED }}",
-        label: "Success",
-        followType: "first",
-      },
-      {
-        when: "{{ FAILED }}",
-        label: "Failure",
-        followType: "all",
-      },
-    ];
-  }
-
-  // Ensure we have some data for testing
-  if (!data.description) {
-    data.description =
-      "This is a sample task description for testing purposes.";
-  }
-
-  if (!data.input && !data.output) {
-    data.input = {
-      "sample-input": "This is a sample input value",
-      "complex-input": { key: "value", nested: { data: true } },
-    };
-  }
+  // Removed hardcoded test data to allow real data to flow through
 
   // Log the transitions to make sure they exist
   console.log("TRANSITIONS FOR NODE:", data.name, data.next);
@@ -61,7 +33,7 @@ export function TaskNode({ data }: { data: TaskNodeData }) {
     <div
       className={cn(
         "workflow-node",
-        isExpanded && "z-10" // Add higher z-index when expanded
+        isExpanded && "expanded" // Use the expanded class for systematic z-index handling
       )}
     >
       <Handle
@@ -83,25 +55,15 @@ export function TaskNode({ data }: { data: TaskNodeData }) {
         <TaskNodeDetails isExpanded={isExpanded} data={data} />
       </div>
 
-      {/* Transition tabs - always visible with higher z-index and more prominent styling */}
-      <div className="mt-6 pt-4 border-t-2 border-[hsl(var(--workflow-blue))] relative z-50">
+      {/* Transition tabs - always visible with systematic z-index and more prominent styling */}
+      <div className="mt-6 pt-4 border-t-2 border-[hsl(var(--workflow-blue))] transitions-section">
         <h4 className="text-xs font-medium text-[hsl(var(--workflow-blue))] uppercase tracking-wider mb-3">
           Transitions
         </h4>
         {data.next && data.next.length > 0 ? (
           <div className="space-y-2">
             {data.next.map((transition, idx) => (
-              <div
-                key={idx}
-                className={cn(
-                  "relative flex flex-col p-2 rounded-md",
-                  "bg-[hsl(var(--muted))]/50",
-                  "border-2 border-[hsl(var(--border))]/70",
-                  "transition-all duration-200",
-                  "hover:bg-[hsl(var(--muted))]/60",
-                  "hover:border-[hsl(var(--border))]"
-                )}
-              >
+              <div key={idx} className="transition-item">
                 <div className="flex items-center gap-2 mb-2">
                   <div
                     className={cn(
@@ -120,7 +82,7 @@ export function TaskNode({ data }: { data: TaskNodeData }) {
                     position={Position.Right}
                     id={`transition-${idx}`}
                     className={cn(
-                      "!w-3 !h-3 !border-2 !border-[hsl(var(--background))] transition-all duration-200",
+                      "handle-right",
                       transition.followType === "all"
                         ? "!bg-[hsl(var(--workflow-green))]"
                         : "!bg-[hsl(var(--workflow-blue))]"

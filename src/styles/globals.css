@@ -99,8 +99,58 @@
     z-index: 1;
   }
 
+  /* Systematic z-index handling */
   .workflow-node:hover {
     z-index: 10;
+  }
+
+  /* Expanded nodes should be above hovered nodes */
+  .workflow-node.expanded {
+    z-index: 20;
+  }
+
+  /* Selected nodes should be above everything else */
+  .react-flow__node.selected .workflow-node {
+    z-index: 50 !important;
+  }
+
+  /* Transition section should always be above other node content */
+  .workflow-node .transitions-section {
+    z-index: 30;
+    position: relative;
+  }
+
+  /* Details section should be properly positioned */
+  .workflow-node .details-section {
+    position: relative;
+    z-index: 25;
+  }
+
+  /* Improve transition visibility and layout */
+  .workflow-node .transitions-section .transition-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    background-color: hsla(var(--muted) / 0.5);
+    border: 2px solid hsla(var(--border) / 0.7);
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+  }
+
+  .workflow-node .transitions-section .transition-item:hover {
+    background-color: hsla(var(--muted) / 0.6);
+    border-color: hsl(var(--border));
+  }
+
+  /* Ensure handles are visible and properly positioned */
+  .workflow-node .transitions-section .handle-right {
+    right: -0.75rem !important;
+    width: 0.75rem !important;
+    height: 0.75rem !important;
+    border: 2px solid hsl(var(--background)) !important;
   }
 
   .workflow-button {
@@ -154,7 +204,6 @@
 
 .react-flow__edge-path {
   @apply !stroke-[hsl(var(--workflow-blue))] !stroke-[3px];
-  z-index: 10;
   filter: drop-shadow(0 0 2px rgba(52, 152, 219, 0.5));
 }
 
@@ -197,13 +246,11 @@
   overflow: visible !important;
   width: auto !important;
   height: auto !important;
-  z-index: 5 !important;
   pointer-events: all !important;
 }
 
-/* Make sure transitions are visible */
+/* Make sure transitions are visible - using our systematic z-index approach */
 .react-flow__node-task .workflow-node > div:last-child {
-  z-index: 50 !important;
   position: relative !important;
   pointer-events: all !important;
 }

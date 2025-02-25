@@ -7,8 +7,8 @@ import { TestWorkflow } from "./components/TestWorkflow";
 import { WorkflowBundle } from "./types/workflow";
 import "./styles/globals.css";
 
-// Set this to true to use the test workflow component
-const USE_TEST_WORKFLOW = true;
+// Set this to false to allow users to upload/browse
+const USE_TEST_WORKFLOW = false;
 
 function App() {
   const [template, setTemplate] = useState<WorkflowBundle | null>(null);
