@@ -1,48 +1,105 @@
-// React is used implicitly for JSX
+/**
+ * TaskNode Component
+ *
+ * Renders a workflow task as an interactive node within the workflow graph.
+ * This component displays task information, status indicators, and handles user
+ * interactions such as expanding/collapsing details and navigating to sub-workflows.
+ *
+ * @module components/TaskNode
+ */
+import { useEffect, useState, useRef } from "react";
 import { Handle, Position } from "reactflow";
 import { TaskNodeHeader } from "./TaskNodeHeader";
 import { TaskNodeDetails } from "./TaskNodeDetails";
 import { useTaskNode } from "./useTaskNode";
+import { TransitionTabs } from "./TransitionTabs";
 import { TaskNodeData } from "./types";
 import { cn } from "@/lib/utils";
+import "./TaskNode.css";
 
+/**
+ * TaskNode component for rendering workflow tasks
+ *
+ * @param {Object} props - Component props
+ * @param {TaskNodeData} props.data - Task data containing all information about the task
+ * @returns {JSX.Element} The rendered task node
+ */
 export function TaskNode({ data }: { data: TaskNodeData }) {
+  // Initialize as ready to avoid rendering issues
+  const [isReady, setIsReady] = useState(true);
+  const nodeRef = useRef<HTMLDivElement>(null);
+
   const { isExpanded, toggleExpanded, taskType, hasDetails, indicators } =
     useTaskNode(data);
 
-  console.log("TaskNode data:", data);
-  console.log("Transitions:", data.next);
-  console.log("Has transitions:", Boolean(data.next && data.next.length > 0));
-  console.log("Is expanded:", isExpanded);
-  console.log("Has details:", hasDetails);
+  // Pass the hoveredTransitionIndex to the parent component via data callback if available
+  // Removed console.log for production code
 
+  // Force a re-render after component mount to ensure proper layout
+  useEffect(() => {
+    // Use requestAnimationFrame to ensure the DOM has been painted
+    const rafId = requestAnimationFrame(() => {
+      // This will trigger a re-render after the initial paint
+      setIsReady(true);
+    });
+
+    return () => cancelAnimationFrame(rafId);
+  }, []); // Only run once on mount
+
+  // Keep the original function signature to match the TaskNodeHeader props
   const handleToggle = () => {
-    console.log("Toggle expanded clicked, current state:", isExpanded);
-    console.log("Has details:", hasDetails);
-    console.log("Task data:", data);
     toggleExpanded();
-    console.log("New expanded state:", !isExpanded);
   };
 
-  // Removed hardcoded test data to allow real data to flow through
+  // Handle transition hover
+  const handleTransitionHover = (transitionIndex: number | null) => {
+    if (data.id) data.onTransitionHover?.(data.id, transitionIndex);
+  };
 
-  // Log the transitions to make sure they exist
-  console.log("TRANSITIONS FOR NODE:", data.name, data.next);
+  // Calculate the width of the node to properly size the tabs
+  useEffect(() => {
+    if (nodeRef.current) {
+      nodeRef.current.style.setProperty(
+        "--node-width",
+        `${nodeRef.current.offsetWidth}px`
+      );
+    }
+  }, [isExpanded]);
+
+  // Don't render until ready to prevent grey nodes
+  if (!isReady) {
+    return (
+      <div className="workflow-node-loading">
+        <div className="p-4 bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-lg">
+          <div className="animate-pulse h-4 w-3/4 bg-[hsl(var(--muted))] rounded mb-2"></div>
+          <div className="animate-pulse h-3 w-1/2 bg-[hsl(var(--muted))] rounded"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
+      ref={nodeRef}
       className={cn(
         "workflow-node",
         isExpanded && "expanded" // Use the expanded class for systematic z-index handling
       )}
+      draggable="true"
     >
       <Handle
         type="target"
         position={Position.Top}
-        className="!w-2 !h-2 !bg-workflow-blue !border-2 !border-[hsl(var(--background))] transition-all duration-200"
+        className="!w-2 !h-2 !bg-[hsl(var(--workflow-blue))] !border-2 !border-[hsl(var(--background))] transition-all duration-200"
+        data-nodeid={data.name}
+        data-handlepos="top"
+        data-id={`${data.name}-null-target`}
       />
 
-      <div className="space-y-4">
+      <div
+        className={cn("space-y-4", hasDetails && "cursor-pointer select-none")}
+        onClick={() => hasDetails && toggleExpanded()}
+      >
         <TaskNodeHeader
           name={data.name}
           taskType={taskType}
@@ -52,72 +109,18 @@ export function TaskNode({ data }: { data: TaskNodeData }) {
           onToggle={handleToggle}
         />
 
-        <TaskNodeDetails isExpanded={isExpanded} data={data} />
-      </div>
-
-      {/* Transition tabs - always visible with systematic z-index and more prominent styling */}
-      <div className="mt-6 pt-4 border-t-2 border-[hsl(var(--workflow-blue))] transitions-section">
-        <h4 className="text-xs font-medium text-[hsl(var(--workflow-blue))] uppercase tracking-wider mb-3">
-          Transitions
-        </h4>
-        {data.next && data.next.length > 0 ? (
-          <div className="space-y-2">
-            {data.next.map((transition, idx) => (
-              <div key={idx} className="transition-item">
-                <div className="flex items-center gap-2 mb-2">
-                  <div
-                    className={cn(
-                      "w-4 h-4 rounded-full",
-                      transition.followType === "all"
-                        ? "bg-[hsl(var(--workflow-green))]"
-                        : "bg-[hsl(var(--workflow-blue))]"
-                    )}
-                    title={`Follow ${transition.followType}`}
-                  />
-                  <div className="flex-1 text-sm font-medium truncate">
-                    {transition.label || "Transition"}
-                  </div>
-                  <Handle
-                    type="source"
-                    position={Position.Right}
-                    id={`transition-${idx}`}
-                    className={cn(
-                      "handle-right",
-                      transition.followType === "all"
-                        ? "!bg-[hsl(var(--workflow-green))]"
-                        : "!bg-[hsl(var(--workflow-blue))]"
-                    )}
-                  />
-                </div>
-                {transition.when && (
-                  <code
-                    className={cn(
-                      "block w-full text-xs font-mono text-muted-foreground",
-                      "bg-[hsl(var(--muted))]/40 rounded-md p-1.5 mt-1"
-                    )}
-                  >
-                    {transition.when}
-                  </code>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-sm text-muted-foreground">
-            No transitions defined
-          </div>
-        )}
-      </div>
-
-      {/* Default handle if no transitions */}
-      {(!data.next || data.next.length === 0) && (
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          className="!w-2 !h-2 !bg-workflow-blue !border-2 !border-[hsl(var(--background))] transition-all duration-200"
-          id="default"
+        <TaskNodeDetails
+          isExpanded={isExpanded}
+          data={data}
+          hideTransitions={true} // Hide transitions in details since they're now shown as tabs
         />
-      )}
+      </div>
+      <div className="task-node-tabs">
+        <TransitionTabs
+          transitions={data.next || []}
+          onTransitionHover={handleTransitionHover}
+        />
+      </div>
     </div>
   );
 }

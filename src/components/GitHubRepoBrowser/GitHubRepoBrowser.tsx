@@ -9,59 +9,56 @@ import {
   User,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { WorkflowBundle } from "../types/workflow";
-import { isValidWorkflowBundle } from "../lib/workflow-validation";
+import { isValidWorkflowBundle } from "@/lib/workflow-validation";
+import {
+  GitHubRepoBrowserProps,
+  GitHubUser,
+  RepoItem,
+  RepoContent,
+  BreadcrumbItem,
+} from "./types";
+import {
+  FEATURED_USERS,
+  ERROR_MESSAGES,
+  UI_TEXT,
+  CSS_CLASSES,
+  WORKFLOW_FILE_EXTENSIONS,
+} from "./constants";
 
-interface RepoItem {
-  name: string;
-  path: string;
-  type: "dir" | "file";
-  html_url: string;
-  download_url?: string;
-}
-
-interface RepoContent {
-  items: RepoItem[];
-  readme?: string;
-}
-
-interface GitHubUser {
-  name: string;
-  username: string;
-  description: string;
-  avatarUrl?: string;
-  defaultRepo?: string;
-}
-
-interface GitHubRepoBrowserProps {
-  onWorkflowSelect: (data: WorkflowBundle) => void;
-}
-
-// Featured GitHub users with Rewst workflows
-const FEATURED_USERS: GitHubUser[] = [
-  {
-    name: "GigaCode Dev",
-    username: "gigacodedev",
-    description: "Collection of Rewst workflows and automation examples",
-    avatarUrl: "https://github.com/gigacodedev.png",
-    defaultRepo: "Rewst",
-  },
-  // More users can be added here in the future
-];
-
+/**
+ * GitHubRepoBrowser Component
+ *
+ * A component that allows users to browse and visualize Rewst workflows
+ * directly from GitHub repositories. It provides a user interface to:
+ * - Browse featured GitHub contributors
+ * - Navigate through repository folders
+ * - View README files
+ * - Load and visualize workflow bundles
+ *
+ * @example
+ * ```tsx
+ * <GitHubRepoBrowser onWorkflowSelect={(data) => console.log('Selected workflow:', data)} />
+ * ```
+ */
 export function GitHubRepoBrowser({
   onWorkflowSelect,
 }: GitHubRepoBrowserProps) {
+  // State for selected user and repository
   const [selectedUser, setSelectedUser] = useState<GitHubUser | null>(null);
   const [repoName, setRepoName] = useState("Rewst");
+
+  // State for repository contents and navigation
   const [content, setContent] = useState<RepoContent>({ items: [] });
-  const [breadcrumbs, setBreadcrumbs] = useState<
-    { name: string; path: string }[]
-  >([]);
+  const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
+
+  // State for loading and error handling
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch repository contents
+  /**
+   * Fetches repository contents from GitHub API
+   * @param path - Path within the repository to fetch
+   */
   const fetchRepoContents = useCallback(
     async (path: string = "") => {
       if (!selectedUser) return;
@@ -86,11 +83,11 @@ export function GitHubRepoBrowser({
                 : new Date();
               const formattedTime = resetDate.toLocaleTimeString();
               throw new Error(
-                `GitHub API rate limit exceeded. Rate limit will reset at ${formattedTime}`
+                ERROR_MESSAGES.RATE_LIMIT_EXCEEDED(formattedTime)
               );
             }
           }
-          throw new Error(`GitHub API error: ${response.status}`);
+          throw new Error(ERROR_MESSAGES.API_ERROR(response.status));
         }
 
         const data = await response.json();
@@ -132,9 +129,9 @@ export function GitHubRepoBrowser({
         }
       } catch (err) {
         setError(
-          `Failed to fetch repository contents: ${
+          ERROR_MESSAGES.FETCH_REPO_CONTENTS(
             err instanceof Error ? err.message : String(err)
-          }`
+          )
         );
         console.error("Error fetching repo contents:", err);
       } finally {
@@ -144,7 +141,10 @@ export function GitHubRepoBrowser({
     [selectedUser, repoName]
   );
 
-  // Load workflow from GitHub
+  /**
+   * Loads a workflow file from GitHub
+   * @param item - Repository item representing the workflow file
+   */
   const loadWorkflow = useCallback(
     async (item: RepoItem) => {
       if (!item.download_url) return;
@@ -154,24 +154,22 @@ export function GitHubRepoBrowser({
       try {
         const response = await fetch(item.download_url);
         if (!response.ok) {
-          throw new Error(`Failed to fetch workflow: ${response.status}`);
+          throw new Error(ERROR_MESSAGES.FETCH_WORKFLOW(response.status));
         }
 
         const data = await response.json();
 
         // Validate that the data is a valid WorkflowBundle
         if (!isValidWorkflowBundle(data)) {
-          throw new Error(
-            "Invalid workflow format. The file does not contain a valid Rewst workflow."
-          );
+          throw new Error(ERROR_MESSAGES.INVALID_WORKFLOW);
         }
 
-        onWorkflowSelect(data as WorkflowBundle);
+        onWorkflowSelect(data);
       } catch (err) {
         setError(
-          `Failed to load workflow: ${
+          ERROR_MESSAGES.LOAD_WORKFLOW(
             err instanceof Error ? err.message : String(err)
-          }`
+          )
         );
         console.error("Error loading workflow:", err);
       } finally {
@@ -181,7 +179,10 @@ export function GitHubRepoBrowser({
     [onWorkflowSelect]
   );
 
-  // Navigate to a directory
+  /**
+   * Navigates to a directory in the repository
+   * @param path - Path to navigate to
+   */
   const navigateTo = useCallback(
     (path: string) => {
       fetchRepoContents(path);
@@ -189,7 +190,10 @@ export function GitHubRepoBrowser({
     [fetchRepoContents]
   );
 
-  // Select a GitHub user
+  /**
+   * Selects a GitHub user to browse their repositories
+   * @param user - GitHub user to select
+   */
   const selectUser = useCallback((user: GitHubUser) => {
     setSelectedUser(user);
     setRepoName(user.defaultRepo || "Rewst");
@@ -197,14 +201,19 @@ export function GitHubRepoBrowser({
     setBreadcrumbs([]);
   }, []);
 
-  // Go back to user selection
+  /**
+   * Returns to the user selection view
+   */
   const goBackToUsers = useCallback(() => {
     setSelectedUser(null);
     setContent({ items: [] });
     setBreadcrumbs([]);
   }, []);
 
-  // Handle repository change
+  /**
+   * Handles repository name input change
+   * @param e - Change event from the input element
+   */
   const handleRepoChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setRepoName(e.target.value);
@@ -214,7 +223,10 @@ export function GitHubRepoBrowser({
     []
   );
 
-  // Handle repository form submission
+  /**
+   * Handles repository form submission
+   * @param e - Form submission event
+   */
   const handleRepoSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
@@ -230,48 +242,53 @@ export function GitHubRepoBrowser({
     }
   }, [selectedUser, fetchRepoContents]);
 
+  /**
+   * Checks if a file is a workflow bundle based on its extension
+   * @param fileName - Name of the file to check
+   * @returns True if the file is a workflow bundle
+   */
+  const isWorkflowBundle = (fileName: string): boolean => {
+    return WORKFLOW_FILE_EXTENSIONS.some((ext) => fileName.endsWith(ext));
+  };
+
   return (
-    <div className="bg-[hsl(var(--card))] rounded-lg shadow-lg p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Github className="w-5 h-5 text-workflow-blue" />
-        <h2 className="text-xl font-semibold text-foreground">
-          Featured Workflows from GitHub
-        </h2>
+    <div className={CSS_CLASSES.CONTAINER}>
+      <div className={CSS_CLASSES.TITLE_CONTAINER}>
+        <Github className={CSS_CLASSES.TITLE_ICON} />
+        <h2 className={CSS_CLASSES.TITLE}>{UI_TEXT.TITLE}</h2>
       </div>
 
       {/* User selection view */}
       {!selectedUser ? (
         <div className="space-y-6">
-          <p className="text-muted-foreground">
-            Browse workflow examples from these GitHub contributors:
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <p className="text-muted-foreground">{UI_TEXT.BROWSE_INTRO}</p>
+          <div className={CSS_CLASSES.USER_GRID}>
             {FEATURED_USERS.map((user) => (
               <div
                 key={user.username}
-                className="flex items-center gap-4 p-4 rounded-md hover:bg-[hsl(var(--muted))] transition-colors cursor-pointer"
+                className={CSS_CLASSES.USER_CARD}
                 onClick={() => selectUser(user)}
               >
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-[hsl(var(--muted))]">
+                <div className={CSS_CLASSES.USER_AVATAR_CONTAINER}>
                   {user.avatarUrl ? (
                     <img
                       src={user.avatarUrl}
                       alt={user.name}
-                      className="w-full h-full object-cover"
+                      className={CSS_CLASSES.USER_AVATAR}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <User className="w-6 h-6 text-muted-foreground" />
+                    <div className={CSS_CLASSES.USER_ICON_CONTAINER}>
+                      <User className={CSS_CLASSES.USER_ICON} />
                     </div>
                   )}
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-medium text-foreground">{user.name}</h3>
-                  <p className="text-sm text-muted-foreground">
+                <div className={CSS_CLASSES.USER_INFO}>
+                  <h3 className={CSS_CLASSES.USER_NAME}>{user.name}</h3>
+                  <p className={CSS_CLASSES.USER_DESCRIPTION}>
                     {user.description}
                   </p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                <ChevronRight className={CSS_CLASSES.CHEVRON_ICON} />
               </div>
             ))}
           </div>
@@ -280,16 +297,13 @@ export function GitHubRepoBrowser({
         <>
           {/* Repository selection */}
           <div className="mb-4">
-            <form onSubmit={handleRepoSubmit} className="flex gap-2">
+            <form onSubmit={handleRepoSubmit} className={CSS_CLASSES.REPO_FORM}>
               <div className="flex-1">
-                <label
-                  htmlFor="repo-name"
-                  className="block text-sm font-medium text-muted-foreground mb-1"
-                >
-                  Repository
+                <label htmlFor="repo-name" className={CSS_CLASSES.REPO_LABEL}>
+                  {UI_TEXT.REPOSITORY_LABEL}
                 </label>
                 <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-[hsl(var(--border))] bg-[hsl(var(--muted))] text-muted-foreground text-sm">
+                  <span className={CSS_CLASSES.REPO_PREFIX}>
                     {selectedUser.username}/
                   </span>
                   <input
@@ -297,39 +311,40 @@ export function GitHubRepoBrowser({
                     id="repo-name"
                     value={repoName}
                     onChange={handleRepoChange}
-                    className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md bg-[hsl(var(--muted))] border border-[hsl(var(--border))] text-foreground focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]"
-                    placeholder="Repository name"
+                    className={CSS_CLASSES.REPO_INPUT}
+                    placeholder={UI_TEXT.REPOSITORY_PLACEHOLDER}
                   />
                 </div>
               </div>
-              <button
-                type="submit"
-                className="self-end px-4 py-2 bg-[hsl(var(--primary))] text-primary-foreground rounded-md hover:bg-[hsl(var(--primary))]/90 transition-colors"
-              >
-                Load
+              <button type="submit" className={CSS_CLASSES.LOAD_BUTTON}>
+                {UI_TEXT.LOAD_BUTTON}
               </button>
             </form>
           </div>
 
           {/* Breadcrumbs */}
-          <div className="flex items-center flex-wrap gap-1 mb-4 text-sm text-muted-foreground">
+          <div className={CSS_CLASSES.BREADCRUMBS}>
             <button
               onClick={goBackToUsers}
-              className="hover:text-foreground transition-colors font-medium"
+              className={CSS_CLASSES.BREADCRUMB_BUTTON}
             >
-              Featured Users
+              {UI_TEXT.FEATURED_USERS_BREADCRUMB}
             </button>
-            <ChevronRight className="w-3 h-3 mx-1" />
+            <ChevronRight className={CSS_CLASSES.BREADCRUMB_CHEVRON} />
             <span className="text-foreground">{selectedUser.name}</span>
             {breadcrumbs.length > 0 && (
               <>
-                <ChevronRight className="w-3 h-3 mx-1" />
+                <ChevronRight className={CSS_CLASSES.BREADCRUMB_CHEVRON} />
                 {breadcrumbs.map((crumb, index) => (
                   <React.Fragment key={crumb.path}>
-                    {index > 0 && <ChevronRight className="w-3 h-3 mx-1" />}
+                    {index > 0 && (
+                      <ChevronRight
+                        className={CSS_CLASSES.BREADCRUMB_CHEVRON}
+                      />
+                    )}
                     <button
                       onClick={() => navigateTo(crumb.path)}
-                      className="hover:text-foreground transition-colors"
+                      className={CSS_CLASSES.BREADCRUMB_BUTTON}
                     >
                       {crumb.name}
                     </button>
@@ -341,9 +356,9 @@ export function GitHubRepoBrowser({
 
           {/* Error message */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/50 rounded-md p-4 mb-4 text-red-500">
-              <div className="flex items-start gap-2">
-                <Info className="w-5 h-5 mt-0.5 flex-shrink-0" />
+            <div className={CSS_CLASSES.ERROR_CONTAINER}>
+              <div className={CSS_CLASSES.ERROR_CONTENT}>
+                <Info className={CSS_CLASSES.ERROR_ICON} />
                 <p>{error}</p>
               </div>
             </div>
@@ -351,47 +366,42 @@ export function GitHubRepoBrowser({
 
           {/* Loading state */}
           {loading && (
-            <div className="py-8 text-center text-muted-foreground">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[hsl(var(--workflow-blue))]"></div>
-              <p className="mt-2">Loading...</p>
+            <div className={CSS_CLASSES.LOADING_CONTAINER}>
+              <div className={CSS_CLASSES.LOADING_SPINNER}></div>
+              <p className={CSS_CLASSES.LOADING_TEXT}>{UI_TEXT.LOADING}</p>
             </div>
           )}
 
           {/* Repository contents */}
           {!loading && content.items.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className={CSS_CLASSES.ITEM_GRID}>
               {content.items.map((item) => (
                 <div
                   key={item.path}
-                  className="flex items-center gap-3 p-3 rounded-md hover:bg-[hsl(var(--muted))] transition-colors cursor-pointer"
+                  className={CSS_CLASSES.ITEM_CARD}
                   onClick={() => {
                     if (item.type === "dir") {
                       navigateTo(item.path);
-                    } else if (
-                      item.name.endsWith(".json") ||
-                      item.name.endsWith(".bundle.json")
-                    ) {
+                    } else if (isWorkflowBundle(item.name)) {
                       loadWorkflow(item);
                     }
                   }}
                 >
                   {item.type === "dir" ? (
-                    <Folder className="w-5 h-5 text-workflow-blue" />
-                  ) : item.name.endsWith(".json") ||
-                    item.name.endsWith(".bundle.json") ? (
-                    <File className="w-5 h-5 text-workflow-green" />
+                    <Folder className={CSS_CLASSES.FOLDER_ICON} />
+                  ) : isWorkflowBundle(item.name) ? (
+                    <File className={CSS_CLASSES.FILE_ICON} />
                   ) : (
-                    <File className="w-5 h-5 text-muted-foreground" />
+                    <File className={CSS_CLASSES.GENERIC_FILE_ICON} />
                   )}
-                  <div className="flex-1 truncate">
-                    <p className="text-foreground truncate">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className={CSS_CLASSES.ITEM_INFO}>
+                    <p className={CSS_CLASSES.ITEM_NAME}>{item.name}</p>
+                    <p className={CSS_CLASSES.ITEM_TYPE}>
                       {item.type === "dir"
-                        ? "Directory"
-                        : item.name.endsWith(".json") ||
-                          item.name.endsWith(".bundle.json")
-                        ? "Workflow Bundle"
-                        : "File"}
+                        ? UI_TEXT.ITEM_TYPES.DIRECTORY
+                        : isWorkflowBundle(item.name)
+                        ? UI_TEXT.ITEM_TYPES.WORKFLOW_BUNDLE
+                        : UI_TEXT.ITEM_TYPES.FILE}
                     </p>
                   </div>
                   <a
@@ -399,10 +409,10 @@ export function GitHubRepoBrowser({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                    title="View on GitHub"
+                    className={CSS_CLASSES.EXTERNAL_LINK}
+                    title={UI_TEXT.VIEW_ON_GITHUB}
                   >
-                    <ExternalLink className="w-4 h-4" />
+                    <ExternalLink className={CSS_CLASSES.EXTERNAL_LINK_ICON} />
                   </a>
                 </div>
               ))}
@@ -411,9 +421,11 @@ export function GitHubRepoBrowser({
 
           {/* README content */}
           {!loading && content.readme && (
-            <div className="mt-8 border-t border-[hsl(var(--border))] pt-6">
-              <h3 className="text-lg font-semibold mb-4">README</h3>
-              <div className="prose prose-invert max-w-none">
+            <div className={CSS_CLASSES.README_CONTAINER}>
+              <h3 className={CSS_CLASSES.README_TITLE}>
+                {UI_TEXT.README_TITLE}
+              </h3>
+              <div className={CSS_CLASSES.README_CONTENT}>
                 <ReactMarkdown>{content.readme}</ReactMarkdown>
               </div>
             </div>
@@ -421,8 +433,8 @@ export function GitHubRepoBrowser({
 
           {/* Empty state */}
           {!loading && content.items.length === 0 && !error && (
-            <div className="py-8 text-center text-muted-foreground">
-              <p>No items found in this directory.</p>
+            <div className={CSS_CLASSES.EMPTY_STATE}>
+              <p>{UI_TEXT.EMPTY_DIRECTORY}</p>
             </div>
           )}
         </>

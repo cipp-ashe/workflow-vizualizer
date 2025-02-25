@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
 import { ReactFlowProvider } from "reactflow";
-import { WorkflowViewer } from "./WorkflowViewer";
-import { WorkflowBundle } from "../types/workflow";
-import sampleWorkflow from "../../sample-workflow.json";
+import { WorkflowViewer } from "../WorkflowViewer";
+import { WorkflowBundle } from "@/types/workflow";
+import sampleWorkflow from "../../../sample-workflow.json";
 
+/**
+ * TestWorkflow - A component for testing the WorkflowViewer with a sample workflow
+ *
+ * This component automatically loads a sample workflow and renders it using
+ * the WorkflowViewer component. It's primarily used for development and testing.
+ */
 export function TestWorkflow() {
   const [template, setTemplate] = useState<WorkflowBundle | null>(null);
 

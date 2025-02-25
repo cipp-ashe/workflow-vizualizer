@@ -80,20 +80,51 @@ The built files will be in the `dist` directory.
 
 ## Project Structure
 
-- `src/components/FileUpload.tsx`: Handles JSON file uploads
-- `src/components/GitHubRepoBrowser.tsx`: Provides GitHub repository browsing functionality
+The project follows a standardized component-based structure:
+
+### Main Directories
+
+- `src/components/`: UI components organized in dedicated directories
+- `src/lib/`: Utility functions and shared logic
+- `src/types/`: TypeScript type definitions
+- `src/styles/`: Global styles and theme configuration
+
+### Key Components
+
+- `src/components/FileUpload/`: Handles JSON file uploads
+  - `FileUpload.tsx`: Main component
+  - `types.ts`: TypeScript interfaces
+  - `constants.ts`: Component constants
+- `src/components/GitHubRepoBrowser/`: Provides GitHub repository browsing functionality
+  - `GitHubRepoBrowser.tsx`: Main component
+  - `types.ts`: TypeScript interfaces
+  - `constants.ts`: Component constants
 - `src/components/WorkflowViewer/`: Main visualization components
   - `WorkflowViewer.tsx`: Main component for rendering the workflow graph
-  - `useWorkflowProcessor.ts`: Hook for processing workflow data
-  - `useWorkflowExport.ts`: Hook for exporting visualizations
-  - `Legend.tsx`: Component for displaying the workflow legend
-  - `ControlPanel.tsx`: UI controls for the workflow viewer
+  - `components/`: Sub-components for the workflow viewer
+  - `hooks/`: Custom hooks for workflow processing
+  - `utils/`: Utility functions for workflow visualization
+  - `constants/`: Constants for the workflow viewer
 - `src/components/TaskNode/`: Components for rendering task nodes
   - `TaskNode.tsx`: Main component for rendering task nodes
   - `TaskNodeHeader.tsx`: Header component for task nodes
   - `TaskNodeDetails.tsx`: Component for displaying task details
   - `useTaskNode.ts`: Hook for task node functionality
+- `src/components/ui/`: Shared UI components
+  - `button.tsx`: Button component
+  - `card.tsx`: Card component
+  - `tabs.tsx`: Tabs component
+  - And more reusable UI components
+
+### Utilities and Types
+
+- `src/lib/utils.ts`: Shared utility functions
+- `src/lib/workflow-validation.ts`: Workflow validation utilities
 - `src/types/workflow.ts`: TypeScript interfaces for workflow data
+
+### Path Aliases
+
+The project uses the `@/` path alias to reference files from the `src` directory, making imports cleaner and more maintainable.
 
 ## Workflow JSON Format
 

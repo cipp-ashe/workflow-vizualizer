@@ -14,15 +14,8 @@ import {
 import { TaskNodeData, NodeIndicators } from "./types";
 
 export function useTaskNode(data: TaskNodeData) {
-  // Initialize with a unique ID based on the node data to maintain state across renders
-  const nodeId = data.name + (data.action?.ref || "");
+  // Always start with nodes collapsed by default and ensure they stay that way
   const [isExpanded, setIsExpanded] = useState(false);
-
-  console.log("useTaskNode data:", data);
-  console.log("Node ID for state tracking:", nodeId);
-  console.log("Current expansion state:", isExpanded);
-
-  // Removed forced expanded state for testing
 
   const taskType = useMemo(() => {
     if (!data.action?.ref) {
@@ -31,28 +24,29 @@ export function useTaskNode(data: TaskNodeData) {
 
     const ref = data.action.ref.toLowerCase();
     if (ref.includes("http") || ref.includes("api")) {
-      return { icon: Globe, color: "blue", label: "API Call" };
+      return { icon: Globe, color: "blue", label: "API" };
     }
     if (ref.includes("email") || ref.includes("mail")) {
       return { icon: Mail, color: "purple", label: "Email" };
     }
     if (ref.includes("webhook")) {
-      return { icon: Webhook, color: "green", label: "Webhook" };
+      return { icon: Webhook, color: "green", label: "Hook" };
     }
     if (ref.includes("chat") || ref.includes("message")) {
-      return { icon: MessageSquare, color: "pink", label: "Message" };
+      return { icon: MessageSquare, color: "pink", label: "Chat" };
     }
     return { icon: Settings, color: "gray", label: "Action" };
   }, [data.action?.ref]);
 
   const indicators = useMemo<NodeIndicators>(() => {
-    const list = [];
+    const list = [] as NodeIndicators;
 
     if (data.securitySchema?.redact) {
       list.push({
         icon: Settings,
         color: "blue",
-        title: "Has security redactions",
+        title: "Security",
+        label: "Has security redactions",
       });
     }
 
@@ -60,7 +54,8 @@ export function useTaskNode(data: TaskNodeData) {
       list.push({
         icon: Zap,
         color: "orange",
-        title: "Has retry configuration",
+        title: "Retry",
+        label: "Has retry configuration",
       });
     }
 
@@ -68,7 +63,8 @@ export function useTaskNode(data: TaskNodeData) {
       list.push({
         icon: Code,
         color: "purple",
-        title: "Contains Jinja templates",
+        title: "Jinja",
+        label: "Contains Jinja templates",
       });
     }
 
@@ -76,7 +72,8 @@ export function useTaskNode(data: TaskNodeData) {
       list.push({
         icon: AlertCircle,
         color: "yellow",
-        title: "Mock enabled",
+        title: "Mock",
+        label: "Mock enabled",
       });
     }
 
@@ -84,7 +81,8 @@ export function useTaskNode(data: TaskNodeData) {
       list.push({
         icon: Database,
         color: "purple",
-        title: "Custom organization",
+        title: "Org",
+        label: "Custom organization",
       });
     }
 
@@ -93,8 +91,14 @@ export function useTaskNode(data: TaskNodeData) {
       list.push({
         icon: Webhook, // Using Webhook icon for sub-workflows
         color: "orange",
-        title: "Sub-workflow (clickable)",
+        title: "Sub-workflow",
+        label: "Sub-workflow (click to navigate)",
       });
+    }
+
+    // Add timeout information
+    if (data.timeout) {
+      list.timeout = data.timeout;
     }
 
     return list;

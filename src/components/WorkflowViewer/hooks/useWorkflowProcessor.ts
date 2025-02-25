@@ -1,10 +1,26 @@
 import { useCallback, useEffect } from "react";
-import { Node, Edge, useNodesState, useEdgesState } from "reactflow";
-import { WorkflowBundle, WorkflowObject } from "../../types/workflow";
+import {
+  Node,
+  Edge,
+  useNodesState,
+  useEdgesState,
+  MarkerType,
+} from "reactflow";
+import { WorkflowBundle, WorkflowObject } from "@/types/workflow";
+import { LAYOUT_CONSTANTS } from "../constants/layoutConstants";
 
-const DEFAULT_SPACING = 250;
-
-export function useWorkflowProcessor(template: WorkflowBundle) {
+/**
+ * Hook for processing workflow data into nodes and edges
+ * @param template The workflow bundle containing the objects
+ * @param selectedWorkflowId Optional ID of the selected workflow
+ * @param handleSubWorkflowClick Optional callback for sub-workflow navigation
+ * @returns Processed nodes, edges, and handlers
+ */
+export function useWorkflowProcessor(
+  template: WorkflowBundle,
+  selectedWorkflowId?: string | null,
+  handleSubWorkflowClick?: (subWorkflowId: string) => void
+) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
@@ -73,9 +89,16 @@ export function useWorkflowProcessor(template: WorkflowBundle) {
       return;
     }
 
-    const mainWorkflow = Object.values(template.objects).find(
-      (obj) => obj.type === "workflow" && Array.isArray(obj.fields?.tasks)
-    );
+    // If a specific workflow ID is provided, use that workflow
+    // Otherwise, find the first workflow in the template
+    const mainWorkflow = selectedWorkflowId
+      ? Object.values(template.objects).find(
+          (obj) =>
+            obj.fields?.id === selectedWorkflowId && obj.type === "workflow"
+        )
+      : Object.values(template.objects).find(
+          (obj) => obj.type === "workflow" && Array.isArray(obj.fields?.tasks)
+        );
 
     if (!mainWorkflow?.fields?.tasks) {
       console.error("No workflow tasks found");
@@ -86,18 +109,41 @@ export function useWorkflowProcessor(template: WorkflowBundle) {
     const newEdges: Edge[] = [];
     const processedEdges = new Set<string>();
 
-    let minX = Infinity;
-    let minY = Infinity;
+    // First pass: collect all node positions to calculate proper spacing
+    const nodePositions: { x: number; y: number }[] = [];
     mainWorkflow.fields.tasks.forEach((_, index) => {
       const metadata = getTaskMetadata(index, mainWorkflow);
       if (metadata) {
-        minX = Math.min(minX, metadata.x);
-        minY = Math.min(minY, metadata.y);
+        nodePositions.push({ x: metadata.x, y: metadata.y });
       }
     });
 
-    const offsetX = minX === Infinity ? 0 : minX < 0 ? Math.abs(minX) : 0;
-    const offsetY = minY === Infinity ? 0 : minY < 0 ? Math.abs(minY) : 0;
+    // Calculate minimum distances between nodes
+    let minX = Infinity;
+    let minY = Infinity;
+
+    // Find the minimum X and Y values for offset calculation
+    nodePositions.forEach((pos) => {
+      minX = Math.min(minX, pos.x);
+      minY = Math.min(minY, pos.y);
+    });
+
+    // Calculate offsets to ensure all nodes are in positive space
+    const offsetX =
+      minX === Infinity
+        ? 0
+        : minX < 0
+        ? Math.abs(minX) + LAYOUT_CONSTANTS.NODE_PADDING
+        : LAYOUT_CONSTANTS.NODE_PADDING;
+    const offsetY =
+      minY === Infinity
+        ? 0
+        : minY < 0
+        ? Math.abs(minY) + LAYOUT_CONSTANTS.NODE_PADDING
+        : LAYOUT_CONSTANTS.NODE_PADDING;
+
+    // Ensure minimum spacing between nodes with the same coordinates
+    const usedPositions = new Map<string, boolean>();
 
     mainWorkflow.fields.tasks.forEach((task, index) => {
       if (!task?.id) return;
@@ -118,26 +164,62 @@ export function useWorkflowProcessor(template: WorkflowBundle) {
         }
       }
 
-      const position = metadata
-        ? {
-            x: metadata.x + offsetX,
-            y: metadata.y + offsetY,
-          }
-        : {
-            x: index * DEFAULT_SPACING,
-            y: index % 2 === 0 ? 0 : DEFAULT_SPACING,
-          };
+      // Calculate initial position
+      let posX = metadata
+        ? metadata.x + offsetX
+        : index * LAYOUT_CONSTANTS.DEFAULT_SPACING;
+      let posY = metadata
+        ? metadata.y + offsetY
+        : index % 2 === 0
+        ? LAYOUT_CONSTANTS.NODE_PADDING
+        : LAYOUT_CONSTANTS.NODE_HEIGHT +
+          LAYOUT_CONSTANTS.TAB_HEIGHT +
+          LAYOUT_CONSTANTS.VERTICAL_SPACING;
+
+      // Ensure nodes don't overlap by checking if position is already used
+      let positionKey = `${Math.round(posX)},${Math.round(posY)}`;
+      let positionAttempt = 0;
+
+      // If position is already used, shift it until we find an unused position
+      while (usedPositions.has(positionKey) && positionAttempt < 10) {
+        // Try different directions based on attempt number
+        if (positionAttempt % 4 === 0) {
+          posX += LAYOUT_CONSTANTS.DEFAULT_SPACING;
+        } else if (positionAttempt % 4 === 1) {
+          posY += LAYOUT_CONSTANTS.VERTICAL_SPACING;
+        } else if (positionAttempt % 4 === 2) {
+          posX -= LAYOUT_CONSTANTS.DEFAULT_SPACING;
+        } else {
+          posY -= LAYOUT_CONSTANTS.VERTICAL_SPACING;
+        }
+
+        positionKey = `${Math.round(posX)},${Math.round(posY)}`;
+        positionAttempt++;
+      }
+
+      // Mark this position as used
+      usedPositions.set(positionKey, true);
+
+      const position = {
+        x: posX,
+        y: posY,
+      };
 
       const hasJinjaTemplates =
         detectJinjaTemplates(task.input) ||
         detectJinjaTemplates(task.action) ||
         detectJinjaTemplates(task.next);
 
+      // Check if this task is a sub-workflow task
+      const isSubWorkflowTask = taskObj?.type === "workflow";
+      const subWorkflowId = isSubWorkflowTask ? taskObj?.hash : undefined;
+
       newNodes.push({
         id: task.id,
         type: "task",
         position,
         data: {
+          id: task.id, // Pass the ID to the node data
           name: task.name || taskObj?.nonfunctional_fields?.name || "Task",
           description:
             description ||
@@ -157,6 +239,10 @@ export function useWorkflowProcessor(template: WorkflowBundle) {
           securitySchema: task.securitySchema,
           packOverrides: task.packOverrides,
           hasJinjaTemplates,
+          // Add sub-workflow information if applicable
+          isSubWorkflowTask,
+          subWorkflowId,
+          onSubWorkflowClick: handleSubWorkflowClick,
           next: task.next?.map((transition, idx) => ({
             when: transition.when,
             label: getTransitionLabel(index, idx, mainWorkflow),
@@ -176,15 +262,8 @@ export function useWorkflowProcessor(template: WorkflowBundle) {
 
               const edgeId = `${task.id}-${targetId}`;
               if (!processedEdges.has(edgeId)) {
-                const label = getTransitionLabel(
-                  index,
-                  transitionIndex,
-                  mainWorkflow
-                );
-                // Log the edge creation for debugging
-                console.log(
-                  `Creating edge from ${task.id} to ${targetId} with transition index ${transitionIndex}`
-                );
+                // Get transition label for the tab (used in the node data)
+                // Edge creation information (removed console.log for production)
 
                 newEdges.push({
                   id: edgeId,
@@ -192,14 +271,19 @@ export function useWorkflowProcessor(template: WorkflowBundle) {
                   sourceHandle: `transition-${transitionIndex}`,
                   target: targetId,
                   animated: true,
-                  label: label || transition.label,
+                  // Remove label from edge since it's already in the tab
                   style: {
                     stroke: `hsl(var(--workflow-${
                       isFollowAll ? "green" : "blue"
                     }))`,
                     strokeWidth: 2,
                   },
-                  type: "smoothstep",
+                  type: "step",
+                  markerEnd: {
+                    type: MarkerType.ArrowClosed,
+                    width: 20,
+                    height: 20,
+                  },
                   data: {
                     condition: transition.when,
                     followType: isFollowAll ? "all" : "first",
@@ -218,6 +302,8 @@ export function useWorkflowProcessor(template: WorkflowBundle) {
     setEdges(newEdges);
   }, [
     template,
+    selectedWorkflowId,
+    handleSubWorkflowClick,
     setNodes,
     setEdges,
     resolveReference,
@@ -229,7 +315,7 @@ export function useWorkflowProcessor(template: WorkflowBundle) {
 
   useEffect(() => {
     processTemplate();
-  }, [processTemplate]);
+  }, [processTemplate, selectedWorkflowId]);
 
   const clearWorkflow = useCallback(() => {
     setNodes([]);

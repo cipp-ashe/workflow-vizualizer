@@ -1,13 +1,26 @@
 import React, { useCallback } from "react";
 import { Upload } from "lucide-react";
-import { WorkflowBundle } from "../types/workflow";
-import { isValidWorkflowBundle } from "../lib/workflow-validation";
+import { isValidWorkflowBundle } from "@/lib/workflow-validation";
+import { FILE_UPLOAD_CONSTANTS } from "./constants";
+import { FileUploadProps } from "./types";
 
-interface FileUploadProps {
-  onFileUpload: (template: WorkflowBundle) => void;
-}
-
+/**
+ * FileUpload Component
+ *
+ * A component that allows users to upload Rewst workflow JSON templates.
+ * It provides a drag-and-drop interface and validates that the uploaded
+ * file contains a valid workflow bundle.
+ *
+ * @example
+ * ```tsx
+ * <FileUpload onFileUpload={(data) => console.log('Uploaded workflow:', data)} />
+ * ```
+ */
 export function FileUpload({ onFileUpload }: FileUploadProps) {
+  /**
+   * Handles file selection from the input element
+   * Reads the file, validates it as a workflow bundle, and calls the onFileUpload callback
+   */
   const handleFileChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -21,17 +34,17 @@ export function FileUpload({ onFileUpload }: FileUploadProps) {
           // Validate that the data is a valid WorkflowBundle
           if (!isValidWorkflowBundle(data)) {
             throw new Error(
-              "Invalid workflow format. The file does not contain a valid Rewst workflow."
+              FILE_UPLOAD_CONSTANTS.ERROR_MESSAGES.INVALID_FORMAT
             );
           }
 
-          onFileUpload(data as WorkflowBundle);
+          onFileUpload(data);
         } catch (error) {
           console.error("Error parsing workflow template:", error);
           alert(
             error instanceof Error
               ? error.message
-              : "Error parsing workflow template. Please ensure it is a valid JSON file."
+              : FILE_UPLOAD_CONSTANTS.ERROR_MESSAGES.PARSING_ERROR
           );
         }
       };
@@ -51,17 +64,19 @@ export function FileUpload({ onFileUpload }: FileUploadProps) {
         <div className="flex flex-col items-center justify-center pt-5 pb-6">
           <Upload className="w-12 h-12 mb-3 text-muted-foreground" />
           <p className="mb-2 text-sm text-foreground">
-            <span className="font-semibold">Click to upload</span> or drag and
-            drop
+            <span className="font-semibold">
+              {FILE_UPLOAD_CONSTANTS.UI_TEXT.CLICK_TO_UPLOAD}
+            </span>{" "}
+            {FILE_UPLOAD_CONSTANTS.UI_TEXT.DRAG_AND_DROP}
           </p>
           <p className="text-xs text-muted-foreground">
-            Rewst workflow template (.json)
+            {FILE_UPLOAD_CONSTANTS.UI_TEXT.FILE_TYPE_HINT}
           </p>
         </div>
         <input
           type="file"
           className="hidden"
-          accept=".json"
+          accept={FILE_UPLOAD_CONSTANTS.ACCEPTED_FILE_TYPES}
           onChange={handleFileChange}
         />
       </label>

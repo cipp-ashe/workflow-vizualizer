@@ -4,54 +4,85 @@
 
 @layer base {
   :root {
-    /* Base colors from Rewst */
-    --background: 0 0% 7%;
-    --foreground: 0 0% 100%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 100%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
 
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 210 79% 46%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 0 0% 14%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 46%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 0 0% 14%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 0 0% 17%;
-    --input: 0 0% 17%;
-    --ring: 210 79% 46%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
 
-    /* Workflow specific colors from Rewst */
-    --workflow-blue: 204 70% 53%; /* #3498db */
-    --workflow-green: 122 93% 38%; /* #07bc0c */
-    --workflow-purple: 252 87% 63%; /* #8B5CF6 */
-    --workflow-pink: 331 74% 60%; /* #EC4899 */
-    --workflow-yellow: 48 89% 50%; /* #f1c40f */
-    --workflow-orange: 25 95% 53%; /* #F97316 */
-    --workflow-red: 6 78% 57%; /* #e74d3c */
+    /* Workflow colors */
+    --workflow-blue: 210 100% 50%;
+    --workflow-green: 142 76% 36%;
+    --workflow-red: 0 100% 50%;
+    --workflow-yellow: 48 100% 50%;
+    --workflow-purple: 270 100% 50%;
+    --workflow-pink: 330 100% 50%;
+    --workflow-orange: 30 100% 50%;
+    --workflow-gray: 0 0% 50%;
+  }
 
-    /* Toast colors from Rewst */
-    --toastify-color-light: #fff;
-    --toastify-color-dark: #121212;
-    --toastify-color-info: #3498db;
-    --toastify-color-success: #07bc0c;
-    --toastify-color-warning: #f1c40f;
-    --toastify-color-error: #e74d3c;
-    --toastify-color-transparent: hsla(0, 0%, 100%, 0.7);
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 75.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    /* Workflow colors with improved contrast for dark mode */
+    --workflow-blue: 210 100% 65%;
+    --workflow-green: 142 76% 45%;
+    --workflow-red: 0 100% 65%;
+    --workflow-yellow: 48 100% 65%;
+    --workflow-purple: 270 100% 75%;
+    --workflow-pink: 330 100% 70%;
+    --workflow-orange: 30 100% 65%;
+    --workflow-gray: 0 0% 75%;
   }
 }
 
@@ -59,217 +90,58 @@
   * {
     @apply border-border;
   }
-
-  html {
-    -webkit-font-smoothing: antialiased;
-    box-sizing: border-box;
-    text-size-adjust: 100%;
-  }
-
   body {
-    @apply bg-[hsl(var(--background))] text-foreground;
-    font-family: "Work Sans", sans-serif;
-    font-weight: 400;
-    font-size: 1rem;
-    line-height: 1.5;
-    margin: 0;
-  }
-
-  /* Scrollbar styling */
-  ::-webkit-scrollbar {
-    height: 5px;
-    width: 5px;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-[hsl(var(--muted))]/20;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-[hsl(var(--muted))]/40 rounded-full;
+    @apply bg-background text-foreground;
   }
 }
 
-@layer components {
-  .workflow-node {
-    @apply bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-lg p-6
-           shadow-[0_4px_20px_rgba(0,0,0,0.4)] transition-all duration-200
-           hover:shadow-[0_8px_30px_rgba(0,0,0,0.6)] hover:border-[hsl(var(--border))]/80
-           min-w-[350px] max-w-[450px] overflow-visible;
-    z-index: 1;
-  }
-
-  /* Systematic z-index handling */
-  .workflow-node:hover {
-    z-index: 10;
-  }
-
-  /* Expanded nodes should be above hovered nodes */
-  .workflow-node.expanded {
-    z-index: 20;
-  }
-
-  /* Selected nodes should be above everything else */
-  .react-flow__node.selected .workflow-node {
-    z-index: 50 !important;
-  }
-
-  /* Transition section should always be above other node content */
-  .workflow-node .transitions-section {
-    z-index: 30;
-    position: relative;
-  }
-
-  /* Details section should be properly positioned */
-  .workflow-node .details-section {
-    position: relative;
-    z-index: 25;
-  }
-
-  /* Improve transition visibility and layout */
-  .workflow-node .transitions-section .transition-item {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    border-radius: 0.375rem;
-    padding: 0.5rem;
-    background-color: hsla(var(--muted) / 0.5);
-    border: 2px solid hsla(var(--border) / 0.7);
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 200ms;
-  }
-
-  .workflow-node .transitions-section .transition-item:hover {
-    background-color: hsla(var(--muted) / 0.6);
-    border-color: hsl(var(--border));
-  }
-
-  /* Ensure handles are visible and properly positioned */
-  .workflow-node .transitions-section .handle-right {
-    right: -0.75rem !important;
-    width: 0.75rem !important;
-    height: 0.75rem !important;
-    border: 2px solid hsl(var(--background)) !important;
-  }
-
-  .workflow-button {
-    @apply flex items-center justify-center gap-2 px-4 py-2 rounded-md 
-           text-sm font-medium transition-colors duration-200 w-full;
-  }
-
-  .workflow-button-primary {
-    @apply bg-[hsl(var(--workflow-blue))] text-white 
-           hover:bg-[hsl(var(--workflow-blue))]/90;
-  }
-
-  .workflow-button-danger {
-    @apply bg-[hsl(var(--workflow-red))] text-white 
-           hover:bg-[hsl(var(--workflow-red))]/90;
-  }
-}
-
-/* ReactFlow Overrides */
-.react-flow {
-  @apply bg-[hsl(var(--background))] !important;
-}
-
-.react-flow__node {
-  @apply !bg-[hsl(var(--card))] !text-foreground !important;
-}
-
-.react-flow__node-task {
-  @apply !bg-[hsl(var(--card))] !text-foreground !important;
-  width: auto !important;
-  height: auto !important;
-}
-
-.react-flow__controls {
-  @apply !bg-[hsl(var(--card))] !border-[hsl(var(--border))] !rounded-lg !shadow-lg;
-}
-
-.react-flow__controls button {
-  @apply !bg-[hsl(var(--card))] !border-[hsl(var(--border))] !text-foreground 
-         hover:!bg-[hsl(var(--muted))] !transition-colors !duration-200;
-}
-
-.react-flow__panel {
-  @apply !bg-[hsl(var(--card))]/90 !backdrop-blur-sm !border-[hsl(var(--border))] 
-         !text-foreground !rounded-lg !shadow-lg !p-4;
-}
-
-.react-flow__handle {
-  @apply !w-3 !h-3 !bg-[hsl(var(--workflow-blue))] !border-2 !border-[hsl(var(--background))];
-}
-
-.react-flow__edge-path {
-  @apply !stroke-[hsl(var(--workflow-blue))] !stroke-[3px];
-  filter: drop-shadow(0 0 2px rgba(52, 152, 219, 0.5));
-}
-
-.react-flow__edge.animated path {
-  stroke-dasharray: 5;
-  animation: dashdraw 0.5s linear infinite;
-}
-
-.react-flow__node.selected {
-  @apply !border-[hsl(var(--workflow-blue))] !ring-2 !ring-[hsl(var(--workflow-blue))]/30;
-}
-
-.react-flow__background {
-  @apply !bg-[hsl(var(--background))] !important;
-}
-
-.react-flow__background-pattern {
-  @apply !text-[hsl(var(--border))]/30;
-}
-
-.react-flow__minimap {
-  @apply !bg-[hsl(var(--card))] !border !border-[hsl(var(--border))];
-}
-
-.react-flow__edge-textbg {
-  @apply !fill-[hsl(var(--card))];
-}
-
-.react-flow__edge-text {
-  @apply !fill-foreground;
-}
-
-/* Force dark theme on nodes */
-.react-flow__node-task > div {
-  @apply !bg-[hsl(var(--card))] !important;
-}
-
-.react-flow__node-task foreignObject {
-  @apply !bg-[hsl(var(--card))] !important;
-  overflow: visible !important;
-  width: auto !important;
-  height: auto !important;
-  pointer-events: all !important;
-}
-
-/* Make sure transitions are visible - using our systematic z-index approach */
-.react-flow__node-task .workflow-node > div:last-child {
-  position: relative !important;
-  pointer-events: all !important;
-}
-
-.react-flow__node-task .workflow-node {
-  @apply !bg-[hsl(var(--card))] !important;
-}
-
-/* Ensure text is visible */
-.react-flow__node-task * {
-  @apply !text-foreground;
-}
-
-.react-flow__node-task .text-muted-foreground {
-  @apply !text-muted-foreground;
-}
-
-@keyframes dashdraw {
+/* Animation for collapsible component */
+@keyframes collapsible-down {
   from {
-    stroke-dashoffset: 10;
+    height: 0;
+    opacity: 0;
   }
+  to {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+  }
+}
+
+@keyframes collapsible-up {
+  from {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+.animate-collapsible-down {
+  animation: collapsible-down 0.2s ease-out;
+}
+
+.animate-collapsible-up {
+  animation: collapsible-up 0.2s ease-in;
+}
+
+/* Workflow node styles */
+.workflow-node {
+  @apply bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-lg p-4 shadow-sm;
+  min-width: 250px;
+  max-width: 350px;
+  z-index: 1;
+  transition: z-index 0s 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.workflow-node.expanded {
+  z-index: 10;
+  @apply shadow-md;
+  transition: z-index 0s, transform 0.2s, box-shadow 0.2s;
+}
+
+.workflow-node .details-section {
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
 }

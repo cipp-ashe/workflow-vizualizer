@@ -1,2 +1,3 @@
-export { TaskNode } from './TaskNode';
-export type { TaskNodeData } from './types';
+export { TaskNode } from "./TaskNode";
+export { TransitionTabs } from "./TransitionTabs";
+export type { TaskNodeData } from "./types";
