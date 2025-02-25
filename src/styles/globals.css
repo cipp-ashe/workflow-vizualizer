@@ -1,0 +1,228 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Base colors from Rewst */
+    --background: 0 0% 7%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 210 79% 46%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 46%;
+
+    --accent: 0 0% 14%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 17%;
+    --input: 0 0% 17%;
+    --ring: 210 79% 46%;
+
+    --radius: 0.5rem;
+
+    /* Workflow specific colors from Rewst */
+    --workflow-blue: 204 70% 53%; /* #3498db */
+    --workflow-green: 122 93% 38%; /* #07bc0c */
+    --workflow-purple: 252 87% 63%; /* #8B5CF6 */
+    --workflow-pink: 331 74% 60%; /* #EC4899 */
+    --workflow-yellow: 48 89% 50%; /* #f1c40f */
+    --workflow-orange: 25 95% 53%; /* #F97316 */
+    --workflow-red: 6 78% 57%; /* #e74d3c */
+
+    /* Toast colors from Rewst */
+    --toastify-color-light: #fff;
+    --toastify-color-dark: #121212;
+    --toastify-color-info: #3498db;
+    --toastify-color-success: #07bc0c;
+    --toastify-color-warning: #f1c40f;
+    --toastify-color-error: #e74d3c;
+    --toastify-color-transparent: hsla(0, 0%, 100%, 0.7);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    box-sizing: border-box;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-[hsl(var(--background))] text-foreground;
+    font-family: "Work Sans", sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    height: 5px;
+    width: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-[hsl(var(--muted))]/20;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-[hsl(var(--muted))]/40 rounded-full;
+  }
+}
+
+@layer components {
+  .workflow-node {
+    @apply bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-lg p-6
+           shadow-[0_4px_20px_rgba(0,0,0,0.4)] transition-all duration-200
+           hover:shadow-[0_8px_30px_rgba(0,0,0,0.6)] hover:border-[hsl(var(--border))]/80
+           min-w-[350px] max-w-[450px] overflow-visible;
+    z-index: 1;
+  }
+
+  .workflow-node:hover {
+    z-index: 10;
+  }
+
+  .workflow-button {
+    @apply flex items-center justify-center gap-2 px-4 py-2 rounded-md 
+           text-sm font-medium transition-colors duration-200 w-full;
+  }
+
+  .workflow-button-primary {
+    @apply bg-[hsl(var(--workflow-blue))] text-white 
+           hover:bg-[hsl(var(--workflow-blue))]/90;
+  }
+
+  .workflow-button-danger {
+    @apply bg-[hsl(var(--workflow-red))] text-white 
+           hover:bg-[hsl(var(--workflow-red))]/90;
+  }
+}
+
+/* ReactFlow Overrides */
+.react-flow {
+  @apply bg-[hsl(var(--background))] !important;
+}
+
+.react-flow__node {
+  @apply !bg-[hsl(var(--card))] !text-foreground !important;
+}
+
+.react-flow__node-task {
+  @apply !bg-[hsl(var(--card))] !text-foreground !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.react-flow__controls {
+  @apply !bg-[hsl(var(--card))] !border-[hsl(var(--border))] !rounded-lg !shadow-lg;
+}
+
+.react-flow__controls button {
+  @apply !bg-[hsl(var(--card))] !border-[hsl(var(--border))] !text-foreground 
+         hover:!bg-[hsl(var(--muted))] !transition-colors !duration-200;
+}
+
+.react-flow__panel {
+  @apply !bg-[hsl(var(--card))]/90 !backdrop-blur-sm !border-[hsl(var(--border))] 
+         !text-foreground !rounded-lg !shadow-lg !p-4;
+}
+
+.react-flow__handle {
+  @apply !w-3 !h-3 !bg-[hsl(var(--workflow-blue))] !border-2 !border-[hsl(var(--background))];
+}
+
+.react-flow__edge-path {
+  @apply !stroke-[hsl(var(--workflow-blue))] !stroke-[3px];
+  z-index: 10;
+  filter: drop-shadow(0 0 2px rgba(52, 152, 219, 0.5));
+}
+
+.react-flow__edge.animated path {
+  stroke-dasharray: 5;
+  animation: dashdraw 0.5s linear infinite;
+}
+
+.react-flow__node.selected {
+  @apply !border-[hsl(var(--workflow-blue))] !ring-2 !ring-[hsl(var(--workflow-blue))]/30;
+}
+
+.react-flow__background {
+  @apply !bg-[hsl(var(--background))] !important;
+}
+
+.react-flow__background-pattern {
+  @apply !text-[hsl(var(--border))]/30;
+}
+
+.react-flow__minimap {
+  @apply !bg-[hsl(var(--card))] !border !border-[hsl(var(--border))];
+}
+
+.react-flow__edge-textbg {
+  @apply !fill-[hsl(var(--card))];
+}
+
+.react-flow__edge-text {
+  @apply !fill-foreground;
+}
+
+/* Force dark theme on nodes */
+.react-flow__node-task > div {
+  @apply !bg-[hsl(var(--card))] !important;
+}
+
+.react-flow__node-task foreignObject {
+  @apply !bg-[hsl(var(--card))] !important;
+  overflow: visible !important;
+  width: auto !important;
+  height: auto !important;
+  z-index: 5 !important;
+  pointer-events: all !important;
+}
+
+/* Make sure transitions are visible */
+.react-flow__node-task .workflow-node > div:last-child {
+  z-index: 50 !important;
+  position: relative !important;
+  pointer-events: all !important;
+}
+
+.react-flow__node-task .workflow-node {
+  @apply !bg-[hsl(var(--card))] !important;
+}
+
+/* Ensure text is visible */
+.react-flow__node-task * {
+  @apply !text-foreground;
+}
+
+.react-flow__node-task .text-muted-foreground {
+  @apply !text-muted-foreground;
+}
+
+@keyframes dashdraw {
+  from {
+    stroke-dashoffset: 10;
+  }
+}

@@ -1,0 +1,66 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules/
+node_modules/.vite/
+node_modules/.vite/deps/
+node_modules/.vite/deps_temp/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+dist-ssr/
+*.local
+build/
+
+# Vite specific
+.vite/
+.vite/deps/
+.vite/deps_temp/
+vite.config.*.timestamp-*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Testing
+coverage/
+.nyc_output/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# TypeScript
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Temporary files
+.temp/
+.tmp/
+.cache/
+
+# Browser caches
+.eslintcache
+.stylelintcache
+
+# Misc
+.vercel/
+.netlify/
