@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ReactFlowProvider } from "reactflow";
 import { FileUpload } from "./components/FileUpload";
-import { WorkflowViewer } from "./components/WorkflowViewer/index";
+import { WorkflowViewer } from "./components/workflow/viewer";
 import { GitHubRepoBrowser } from "./components/GitHubRepoBrowser";
 import { TestWorkflow } from "./components/TestWorkflow/index";
 import { TestButton } from "./components/TestButton";
@@ -18,7 +18,6 @@ const SHOW_BUTTON_TEST = false;
 
 function App() {
   const [template, setTemplate] = useState<WorkflowBundle | null>(null);
-  const [showBrowser, setShowBrowser] = useState(true);
   const [darkMode, setDarkMode] = useState(true); // Default to dark mode
 
   // Initialize dark mode based on localStorage or use dark mode as default
@@ -112,7 +111,7 @@ function App() {
                 <div className="bg-[hsl(var(--card))] rounded-lg shadow-lg flex flex-col">
                   <div className="p-4 border-b border-[hsl(var(--border))]">
                     <div className="flex justify-end items-center">
-                      <div className="flex gap-2">
+                      {/* <div className="flex gap-2">
                         <button
                           onClick={() => setShowBrowser(!showBrowser)}
                           className="px-4 py-2 bg-[hsl(var(--muted))] hover:bg-[hsl(var(--muted))]/80
@@ -122,7 +121,7 @@ function App() {
                             ? "Hide GitHub Browser"
                             : "Show GitHub Browser"}
                         </button>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                   <div>
@@ -130,12 +129,12 @@ function App() {
                   </div>
                 </div>
               </div>
-              {/* GitHub Browser Component - Only shown when showBrowser is true */}
-              {showBrowser && (
-                <div className="lg:col-span-12 bg-[hsl(var(--card))] rounded-lg shadow-lg">
+              {/* GitHub Browser Component - Always shown */}
+              {
+                <div className="lg:col-span-12 bg-[hsl(var(--card))] rounded-lg shadow-lg p-4">
                   <GitHubRepoBrowser onWorkflowSelect={handleFileUpload} />
                 </div>
-              )}
+              }
             </div>
           )}
 
@@ -154,7 +153,7 @@ function App() {
                       ← Back
                     </button>
                     <div className="flex gap-2">
-                      <button
+                      {/* <button
                         onClick={() => setShowBrowser(!showBrowser)}
                         className="px-4 py-2 bg-[hsl(var(--muted))] hover:bg-[hsl(var(--muted))]/80
                                   text-foreground rounded-md transition-colors"
@@ -162,7 +161,7 @@ function App() {
                         {showBrowser
                           ? "Hide GitHub Browser"
                           : "Show GitHub Browser"}
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 </div>
@@ -172,11 +171,11 @@ function App() {
               </div>
 
               {/* GitHub browser below the canvas */}
-              {showBrowser && (
-                <div className="bg-[hsl(var(--card))] rounded-lg shadow-lg">
+              {
+                <div className="bg-[hsl(var(--card))] rounded-lg shadow-lg p-4">
                   <GitHubRepoBrowser onWorkflowSelect={handleFileUpload} />
                 </div>
-              )}
+              }
             </div>
           )}
         </div>

@@ -55,7 +55,8 @@ export interface Task {
     id: string;
     label?: string;
     do?: string[];
-    when?: string; // Add missing property
+    when?: string;
+    publish?: Array<{ key: string; value: string }>;
   }[];
   input?: Record<string, unknown>; // Use unknown instead of any
   timeout?: number;
@@ -64,8 +65,10 @@ export interface Task {
   publishResultAs?: string;
   // Add missing properties
   isMocked?: boolean;
+  join?: number; // Number indicating join behavior
   retry?: unknown;
   runAsOrgId?: string;
   securitySchema?: unknown;
   packOverrides?: unknown;
+  mockInput?: Record<string, unknown>; // Mock input for testing
 }

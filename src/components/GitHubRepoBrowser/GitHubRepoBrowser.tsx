@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Info,
   User,
+  RefreshCw,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { isValidWorkflowBundle } from "@/lib/workflow-validation";
@@ -22,8 +23,13 @@ import {
   ERROR_MESSAGES,
   UI_TEXT,
   CSS_CLASSES,
-  WORKFLOW_FILE_EXTENSIONS,
 } from "./constants";
+import {
+  fetchRepoContentsWithCache,
+  loadWorkflowWithCache,
+  isWorkflowBundle,
+  clearGitHubCache,
+} from "./utils/githubFetchUtils";
 
 /**
  * GitHubRepoBrowser Component
@@ -66,55 +72,14 @@ export function GitHubRepoBrowser({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(
-          `https://api.github.com/repos/${selectedUser.username}/${repoName}/contents/${path}`
+        // Use the cached version when available
+        const repoContent = await fetchRepoContentsWithCache(
+          selectedUser.username,
+          repoName,
+          path
         );
 
-        if (!response.ok) {
-          // Check for rate limit errors
-          if (response.status === 403) {
-            const rateLimitRemaining = response.headers.get(
-              "X-RateLimit-Remaining"
-            );
-            if (rateLimitRemaining === "0") {
-              const resetTime = response.headers.get("X-RateLimit-Reset");
-              const resetDate = resetTime
-                ? new Date(parseInt(resetTime) * 1000)
-                : new Date();
-              const formattedTime = resetDate.toLocaleTimeString();
-              throw new Error(
-                ERROR_MESSAGES.RATE_LIMIT_EXCEEDED(formattedTime)
-              );
-            }
-          }
-          throw new Error(ERROR_MESSAGES.API_ERROR(response.status));
-        }
-
-        const data = await response.json();
-        const items = Array.isArray(data) ? data : [data];
-
-        // Sort items: directories first, then files
-        const sortedItems = items.sort((a, b) => {
-          if (a.type === b.type) {
-            return a.name.localeCompare(b.name);
-          }
-          return a.type === "dir" ? -1 : 1;
-        });
-
-        // Try to fetch README.md if it exists
-        let readme = "";
-        const readmeItem = items.find(
-          (item) => item.name.toLowerCase() === "readme.md"
-        );
-
-        if (readmeItem && readmeItem.download_url) {
-          const readmeResponse = await fetch(readmeItem.download_url);
-          if (readmeResponse.ok) {
-            readme = await readmeResponse.text();
-          }
-        }
-
-        setContent({ items: sortedItems, readme });
+        setContent(repoContent);
 
         // Update breadcrumbs
         if (path) {
@@ -152,12 +117,8 @@ export function GitHubRepoBrowser({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(item.download_url);
-        if (!response.ok) {
-          throw new Error(ERROR_MESSAGES.FETCH_WORKFLOW(response.status));
-        }
-
-        const data = await response.json();
+        // Use the cached version when available
+        const data = await loadWorkflowWithCache(item);
 
         // Validate that the data is a valid WorkflowBundle
         if (!isValidWorkflowBundle(data)) {
@@ -235,6 +196,28 @@ export function GitHubRepoBrowser({
     [fetchRepoContents]
   );
 
+  /**
+   * Handles clearing the GitHub cache
+   */
+  const handleClearCache = useCallback(() => {
+    try {
+      clearGitHubCache();
+      // If we're in a repository, refresh the current view
+      if (selectedUser) {
+        fetchRepoContents(
+          breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1].path : ""
+        );
+      }
+      alert("GitHub cache cleared successfully!");
+    } catch (error) {
+      alert(
+        `Failed to clear cache: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }, [selectedUser, breadcrumbs, fetchRepoContents]);
+
   // Initial load when a user is selected
   useEffect(() => {
     if (selectedUser) {
@@ -242,20 +225,20 @@ export function GitHubRepoBrowser({
     }
   }, [selectedUser, fetchRepoContents]);
 
-  /**
-   * Checks if a file is a workflow bundle based on its extension
-   * @param fileName - Name of the file to check
-   * @returns True if the file is a workflow bundle
-   */
-  const isWorkflowBundle = (fileName: string): boolean => {
-    return WORKFLOW_FILE_EXTENSIONS.some((ext) => fileName.endsWith(ext));
-  };
-
   return (
     <div className={CSS_CLASSES.CONTAINER}>
       <div className={CSS_CLASSES.TITLE_CONTAINER}>
         <Github className={CSS_CLASSES.TITLE_ICON} />
-        <h2 className={CSS_CLASSES.TITLE}>{UI_TEXT.TITLE}</h2>
+        <div className="flex flex-1 justify-between items-center">
+          <h2 className={CSS_CLASSES.TITLE}>{UI_TEXT.TITLE}</h2>
+          <button
+            onClick={handleClearCache}
+            className="flex items-center gap-1 px-2 py-1 text-xs bg-[hsl(var(--muted))] hover:bg-[hsl(var(--muted))]/80 text-foreground rounded-md transition-colors"
+            title="Clear GitHub cache to fetch fresh data"
+          >
+            <RefreshCw className="w-3 h-3 mr-1" /> Clear Cache
+          </button>
+        </div>
       </div>
 
       {/* User selection view */}

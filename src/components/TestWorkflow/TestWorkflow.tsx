@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ReactFlowProvider } from "reactflow";
-import { WorkflowViewer } from "../WorkflowViewer";
+import { WorkflowViewer } from "../workflow/viewer";
 import { WorkflowBundle } from "@/types/workflow";
 import sampleWorkflow from "../../../sample-workflow.json";
 

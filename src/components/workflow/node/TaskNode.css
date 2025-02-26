@@ -1,0 +1,110 @@
+/* Workflow node styling */
+.workflow-node {
+  --node-width: 300px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  box-shadow: 0 4px 6px -1px hsl(var(--shadow, 0 0% 0%) / 0.1),
+    0 2px 4px -1px hsl(var(--shadow, 0 0% 0%) / 0.06);
+  transition: all 0.2s ease;
+  max-width: 300px;
+  position: relative;
+  color: hsl(var(--foreground));
+}
+
+.workflow-node.expanded {
+  z-index: 10;
+  box-shadow: 0 10px 15px -3px hsl(var(--shadow, 0 0% 0%) / 0.1),
+    0 4px 6px -2px hsl(var(--shadow, 0 0% 0%) / 0.05);
+}
+
+/* Task node tabs container */
+.task-node-tabs {
+  position: absolute;
+  bottom: -2.5rem; /* Further reduced to minimize the gap */
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 20; /* Ensure tabs are above other elements */
+}
+
+/* Transition tabs styling */
+.transition-tabs-container {
+  width: var(--node-width, 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Override NavigationMenu styling for our use case */
+.transition-tabs {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* When there's only one tab, make it fill the width of the node */
+.transition-tabs:has(:only-child) {
+  width: 100%;
+}
+
+.transition-tabs:has(:only-child) .transition-tab {
+  width: 100%;
+  max-width: var(--node-width);
+  text-align: center;
+}
+
+.transition-tab {
+  position: relative;
+  /* Round both top and bottom corners for a more complete look */
+  border-radius: 0.5rem;
+  border: 1px solid;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  z-index: 30;
+  display: block;
+  text-decoration: none;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  transform: translateY(
+    -0.25rem
+  ); /* Start slightly raised to be more visible */
+  margin-bottom: 0;
+  min-height: 2.5rem;
+  height: auto;
+  overflow: visible;
+}
+
+.transition-tab:hover {
+  transform: translateY(-0.5rem); /* Raise higher on hover */
+  box-shadow: 0 -4px 6px -1px hsl(var(--shadow, 0 0% 0%) / 0.1);
+}
+
+.transition-tab-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%; /* Ensure content takes full width */
+}
+
+/* Ensure text is not cut off */
+.transition-tab-content span {
+  width: 100%;
+  overflow: visible;
+  white-space: normal; /* Allow text to wrap */
+  word-break: break-word; /* Break long words if needed */
+}
+
+/* Position the handles correctly */
+.react-flow__handle {
+  width: 8px !important;
+  height: 8px !important;
+  border-width: 2px !important;
+  z-index: 30;
+}
