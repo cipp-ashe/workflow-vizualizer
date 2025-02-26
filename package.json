@@ -1,13 +1,37 @@
 {
   "name": "rewst-workflow-viewer",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "A specialized visualization tool for Rewst workflow templates",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/workflow-vizualizer.git"
+  },
+  "keywords": [
+    "rewst",
+    "workflow",
+    "visualization",
+    "react",
+    "typescript",
+    "reactflow",
+    "automation"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/username/workflow-vizualizer/issues"
+  },
+  "homepage": "https://github.com/username/workflow-vizualizer#readme",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "audit": "npm audit",
+    "audit:fix": "npm audit fix",
+    "docs": "echo 'Open docs/README.md in your browser to view documentation'",
+    "clean": "rm -rf node_modules/.cache dist"
   },
   "dependencies": {
     "@radix-ui/react-collapsible": "^1.1.3",
@@ -25,6 +49,7 @@
     "clsx": "^2.1.0",
     "html-to-image": "^1.11.11",
     "lucide-react": "^0.344.0",
+    "node-fetch": "^3.3.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^10.0.0",

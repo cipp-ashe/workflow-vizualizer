@@ -17,6 +17,7 @@ import {
   RepoItem,
   RepoContent,
   BreadcrumbItem,
+  GitHubRepo,
 } from "./types";
 import {
   FEATURED_USERS,
@@ -29,6 +30,8 @@ import {
   loadWorkflowWithCache,
   isWorkflowBundle,
   clearGitHubCache,
+  findBundleDirectories,
+  searchRewstRepos,
 } from "./utils/githubFetchUtils";
 
 /**
@@ -57,6 +60,13 @@ export function GitHubRepoBrowser({
   const [content, setContent] = useState<RepoContent>({ items: [] });
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
 
+  // State for Rewst repositories
+  const [rewstRepos, setRewstRepos] = useState<GitHubRepo[]>([]);
+  const [selectedRewstRepo, setSelectedRewstRepo] = useState<string | null>(
+    null
+  );
+  const [showRewstRepos, setShowRewstRepos] = useState(false);
+
   // State for loading and error handling
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,14 +82,45 @@ export function GitHubRepoBrowser({
       setLoading(true);
       setError(null);
       try {
-        // Use the cached version when available
-        const repoContent = await fetchRepoContentsWithCache(
-          selectedUser.username,
-          repoName,
-          path
-        );
+        // If we're at the root directory and not in a Rewst repo, filter for bundle directories
+        if (!path && !selectedRewstRepo) {
+          // Find directories containing .bundle.json files
+          const bundleDirs = await findBundleDirectories(
+            selectedUser.username,
+            repoName
+          );
 
-        setContent(repoContent);
+          // Create a RepoContent object with only the bundle directories
+          setContent({
+            items: bundleDirs,
+            readme: "", // We'll fetch the README separately if needed
+          });
+
+          // Try to fetch README.md if it exists
+          try {
+            const rootContent = await fetchRepoContentsWithCache(
+              selectedUser.username,
+              repoName
+            );
+            if (rootContent.readme) {
+              setContent((prevContent) => ({
+                ...prevContent,
+                readme: rootContent.readme,
+              }));
+            }
+          } catch (readmeErr) {
+            console.warn("Could not fetch README:", readmeErr);
+          }
+        } else {
+          // For subdirectories or Rewst repos, fetch normally
+          const repoContent = await fetchRepoContentsWithCache(
+            selectedUser.username,
+            selectedRewstRepo || repoName,
+            path
+          );
+
+          setContent(repoContent);
+        }
 
         // Update breadcrumbs
         if (path) {
@@ -103,7 +144,7 @@ export function GitHubRepoBrowser({
         setLoading(false);
       }
     },
-    [selectedUser, repoName]
+    [selectedUser, repoName, selectedRewstRepo]
   );
 
   /**
@@ -152,6 +193,84 @@ export function GitHubRepoBrowser({
   );
 
   /**
+   * Fetches Rewst repositories for the selected user
+   */
+  const fetchRewstRepos = useCallback(async () => {
+    if (!selectedUser) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      const repos = await searchRewstRepos(selectedUser.username);
+      setRewstRepos(repos);
+      setShowRewstRepos(true);
+    } catch (err) {
+      setError(
+        ERROR_MESSAGES.FETCH_REPO_CONTENTS(
+          err instanceof Error ? err.message : String(err)
+        )
+      );
+      console.error("Error fetching Rewst repositories:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedUser]);
+
+  /**
+   * Selects a Rewst repository to browse
+   * @param repoName - Name of the repository to select
+   */
+  const selectRewstRepo = useCallback(
+    async (repoName: string) => {
+      setSelectedRewstRepo(repoName);
+      setContent({ items: [] });
+      setBreadcrumbs([]);
+
+      setLoading(true);
+      setError(null);
+      try {
+        // Find directories containing .bundle.json files in this repo
+        const bundleDirs = await findBundleDirectories(
+          selectedUser!.username,
+          repoName
+        );
+
+        // Create a RepoContent object with only the bundle directories
+        setContent({
+          items: bundleDirs,
+          readme: "", // We'll fetch the README separately if needed
+        });
+
+        // Try to fetch README.md if it exists
+        try {
+          const rootContent = await fetchRepoContentsWithCache(
+            selectedUser!.username,
+            repoName
+          );
+          if (rootContent.readme) {
+            setContent((prevContent) => ({
+              ...prevContent,
+              readme: rootContent.readme,
+            }));
+          }
+        } catch (readmeErr) {
+          console.warn("Could not fetch README:", readmeErr);
+        }
+      } catch (err) {
+        setError(
+          ERROR_MESSAGES.FETCH_REPO_CONTENTS(
+            err instanceof Error ? err.message : String(err)
+          )
+        );
+        console.error("Error fetching bundle directories:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [selectedUser]
+  );
+
+  /**
    * Selects a GitHub user to browse their repositories
    * @param user - GitHub user to select
    */
@@ -160,6 +279,9 @@ export function GitHubRepoBrowser({
     setRepoName(user.defaultRepo || "Rewst");
     setContent({ items: [] });
     setBreadcrumbs([]);
+    setRewstRepos([]);
+    setSelectedRewstRepo(null);
+    setShowRewstRepos(false);
   }, []);
 
   /**
@@ -169,6 +291,9 @@ export function GitHubRepoBrowser({
     setSelectedUser(null);
     setContent({ items: [] });
     setBreadcrumbs([]);
+    setRewstRepos([]);
+    setSelectedRewstRepo(null);
+    setShowRewstRepos(false);
   }, []);
 
   /**
@@ -191,6 +316,8 @@ export function GitHubRepoBrowser({
   const handleRepoSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
+      setSelectedRewstRepo(null);
+      setShowRewstRepos(false);
       fetchRepoContents();
     },
     [fetchRepoContents]
@@ -204,9 +331,15 @@ export function GitHubRepoBrowser({
       clearGitHubCache();
       // If we're in a repository, refresh the current view
       if (selectedUser) {
-        fetchRepoContents(
-          breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1].path : ""
-        );
+        if (selectedRewstRepo) {
+          selectRewstRepo(selectedRewstRepo);
+        } else {
+          fetchRepoContents(
+            breadcrumbs.length > 0
+              ? breadcrumbs[breadcrumbs.length - 1].path
+              : ""
+          );
+        }
       }
       alert("GitHub cache cleared successfully!");
     } catch (error) {
@@ -216,7 +349,26 @@ export function GitHubRepoBrowser({
         }`
       );
     }
-  }, [selectedUser, breadcrumbs, fetchRepoContents]);
+  }, [
+    selectedUser,
+    selectedRewstRepo,
+    breadcrumbs,
+    fetchRepoContents,
+    selectRewstRepo,
+  ]);
+
+  /**
+   * Toggles between showing the main repo and Rewst repos
+   */
+  const toggleRewstRepos = useCallback(() => {
+    if (showRewstRepos) {
+      setShowRewstRepos(false);
+      setSelectedRewstRepo(null);
+      fetchRepoContents();
+    } else {
+      fetchRewstRepos();
+    }
+  }, [showRewstRepos, fetchRewstRepos, fetchRepoContents]);
 
   // Initial load when a user is selected
   useEffect(() => {
@@ -278,31 +430,88 @@ export function GitHubRepoBrowser({
         </div>
       ) : (
         <>
-          {/* Repository selection */}
+          {/* Repository selection and controls */}
           <div className="mb-4">
-            <form onSubmit={handleRepoSubmit} className={CSS_CLASSES.REPO_FORM}>
-              <div className="flex-1">
-                <label htmlFor="repo-name" className={CSS_CLASSES.REPO_LABEL}>
-                  {UI_TEXT.REPOSITORY_LABEL}
-                </label>
-                <div className="flex">
-                  <span className={CSS_CLASSES.REPO_PREFIX}>
-                    {selectedUser.username}/
-                  </span>
-                  <input
-                    type="text"
-                    id="repo-name"
-                    value={repoName}
-                    onChange={handleRepoChange}
-                    className={CSS_CLASSES.REPO_INPUT}
-                    placeholder={UI_TEXT.REPOSITORY_PLACEHOLDER}
-                  />
+            <div className="flex justify-between items-end mb-2">
+              <form
+                onSubmit={handleRepoSubmit}
+                className={CSS_CLASSES.REPO_FORM}
+              >
+                <div className="flex-1">
+                  <label htmlFor="repo-name" className={CSS_CLASSES.REPO_LABEL}>
+                    {UI_TEXT.REPOSITORY_LABEL}
+                  </label>
+                  <div className="flex">
+                    <span className={CSS_CLASSES.REPO_PREFIX}>
+                      {selectedUser.username}/
+                    </span>
+                    <input
+                      type="text"
+                      id="repo-name"
+                      value={repoName}
+                      onChange={handleRepoChange}
+                      className={CSS_CLASSES.REPO_INPUT}
+                      placeholder={UI_TEXT.REPOSITORY_PLACEHOLDER}
+                      disabled={!!selectedRewstRepo}
+                    />
+                  </div>
                 </div>
-              </div>
-              <button type="submit" className={CSS_CLASSES.LOAD_BUTTON}>
-                {UI_TEXT.LOAD_BUTTON}
+                <button
+                  type="submit"
+                  className={CSS_CLASSES.LOAD_BUTTON}
+                  disabled={!!selectedRewstRepo}
+                >
+                  {UI_TEXT.LOAD_BUTTON}
+                </button>
+              </form>
+
+              <button
+                onClick={toggleRewstRepos}
+                className={`px-4 py-2 ${
+                  showRewstRepos
+                    ? "bg-[hsl(var(--muted))] text-muted-foreground"
+                    : "bg-[hsl(var(--primary))] text-primary-foreground"
+                } rounded-md hover:opacity-90 transition-colors ml-2`}
+              >
+                {showRewstRepos ? "Show Main Repo" : "Show Rewst Repos"}
               </button>
-            </form>
+            </div>
+
+            {/* Rewst Repositories List */}
+            {showRewstRepos && (
+              <div className="mt-4 p-4 bg-[hsl(var(--muted))] rounded-md">
+                <h3 className="text-md font-medium mb-2">Rewst Repositories</h3>
+                {rewstRepos.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No Rewst repositories found.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {rewstRepos.map((repo) => (
+                      <div
+                        key={repo.name}
+                        className={`flex items-center gap-2 p-2 rounded-md cursor-pointer ${
+                          selectedRewstRepo === repo.name
+                            ? "bg-[hsl(var(--primary))] text-primary-foreground"
+                            : "hover:bg-[hsl(var(--muted-foreground))/10]"
+                        }`}
+                        onClick={() => selectRewstRepo(repo.name)}
+                      >
+                        <Github className="w-4 h-4" />
+                        <div className="flex-1 truncate">
+                          <p className="font-medium truncate">{repo.name}</p>
+                          {repo.description && (
+                            <p className="text-xs truncate">
+                              {repo.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Breadcrumbs */}
@@ -315,6 +524,25 @@ export function GitHubRepoBrowser({
             </button>
             <ChevronRight className={CSS_CLASSES.BREADCRUMB_CHEVRON} />
             <span className="text-foreground">{selectedUser.name}</span>
+
+            {selectedRewstRepo && (
+              <>
+                <ChevronRight className={CSS_CLASSES.BREADCRUMB_CHEVRON} />
+                <button
+                  onClick={() => {
+                    setSelectedRewstRepo(null);
+                    setShowRewstRepos(true);
+                    fetchRewstRepos();
+                  }}
+                  className={CSS_CLASSES.BREADCRUMB_BUTTON}
+                >
+                  Rewst Repos
+                </button>
+                <ChevronRight className={CSS_CLASSES.BREADCRUMB_CHEVRON} />
+                <span className="text-foreground">{selectedRewstRepo}</span>
+              </>
+            )}
+
             {breadcrumbs.length > 0 && (
               <>
                 <ChevronRight className={CSS_CLASSES.BREADCRUMB_CHEVRON} />

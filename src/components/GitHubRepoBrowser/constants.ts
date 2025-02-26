@@ -15,7 +15,49 @@ export const FEATURED_USERS: GitHubUser[] = [
     avatarUrl: "https://github.com/gigacodedev.png",
     defaultRepo: "Rewst",
   },
-  // More users can be added here in the future
+  {
+    name: "Tre Eiler",
+    username: "Tre-Eiler",
+    description:
+      "Rewst workflows including Apple Shortcuts and TimeZest integrations",
+    avatarUrl: "https://github.com/Tre-Eiler.png",
+    defaultRepo: "Rewst",
+  },
+  {
+    name: "GoCovi",
+    username: "gocovi",
+    description: "Run Python natively in Rewst",
+    avatarUrl: "https://github.com/gocovi.png",
+    defaultRepo: "RewstPy",
+  },
+  {
+    name: "PEAKE Technology Partners",
+    username: "PEAKE-Technology-Partners",
+    description: "Meraki integrations and organization variable workflows",
+    avatarUrl: "https://github.com/PEAKE-Technology-Partners.png",
+    defaultRepo: "Rewst-Workflows",
+  },
+  {
+    name: "Bezalu LLC",
+    username: "BezaluLLC",
+    description: "Long-Running Ticket Report workflow",
+    avatarUrl: "https://github.com/BezaluLLC.png",
+    defaultRepo: "Rewst-Workflows",
+  },
+  {
+    name: "DJ Hayes",
+    username: "djhayes1994",
+    description: "ConnectWise RSS Feed example workflow",
+    avatarUrl: "https://github.com/djhayes1994.png",
+    defaultRepo: "Rewst-Workflows",
+  },
+  {
+    name: "Techgeek",
+    username: "Techgeek2858",
+    description: "Rewst workflow examples",
+    avatarUrl: "https://github.com/Techgeek2858.png",
+    defaultRepo: "Rewst-Workflows",
+  },
 ];
 
 /**

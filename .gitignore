@@ -8,30 +8,21 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Dependencies
-node_modules/
-node_modules/.vite/
-node_modules/.vite/deps/
-node_modules/.vite/deps_temp/
+node_modules
 .pnp
 .pnp.js
 
 # Build outputs
-dist/
-dist-ssr/
+dist
+dist-ssr
 *.local
-build/
-
-# Vite specific
-.vite/
-.vite/deps/
-.vite/deps_temp/
-vite.config.*.timestamp-*
+build
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
-.idea/
+.idea
 .DS_Store
 *.suo
 *.ntvs*
@@ -39,28 +30,36 @@ vite.config.*.timestamp-*
 *.sln
 *.sw?
 
-# Testing
-coverage/
-.nyc_output/
-
 # Environment variables
 .env
-.env.*
-!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# TypeScript
-*.tsbuildinfo
-tsconfig.tsbuildinfo
+# Testing
+coverage
+.nyc_output
+
+# Cache
+.cache
+.eslintcache
+.npm
+.parcel-cache
 
 # Temporary files
-.temp/
-.tmp/
-.cache/
-
-# Browser caches
-.eslintcache
-.stylelintcache
+tmp
+temp
+*.tmp
+*.temp
 
 # Misc
-.vercel/
-.netlify/
+.DS_Store
+Thumbs.db
+*.pem
+.vercel
+.netlify
+
+# Test scripts
+test-*.js
+check-*.js

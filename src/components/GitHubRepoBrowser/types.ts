@@ -1,6 +1,20 @@
 import { WorkflowBundle } from "@/types/workflow";
 
 /**
+ * GitHub repository information
+ */
+export interface GitHubRepo {
+  /** Name of the repository */
+  name: string;
+  /** Description of the repository */
+  description?: string;
+  /** URL to view the repository on GitHub */
+  html_url: string;
+  /** Last update timestamp */
+  updated_at: string;
+}
+
+/**
  * Repository item representing a file or directory in a GitHub repository
  */
 export interface RepoItem {
