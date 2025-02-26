@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LayoutConfig } from "../../shared/types";
 import { DEFAULT_LAYOUT_CONFIG } from "../../shared/constants";
+import { Button } from "@/components/ui/button";
 
 interface LayoutControlsProps {
   onApplyLayout: (config: LayoutConfig) => void;
@@ -26,10 +27,12 @@ export function LayoutControls({ onApplyLayout }: LayoutControlsProps) {
   };
 
   const handleApply = () => {
+    console.log("Applying layout with config:", config);
     onApplyLayout(config);
   };
 
   const handleReset = () => {
+    console.log("Resetting layout to default config");
     setConfig({ ...DEFAULT_LAYOUT_CONFIG });
     onApplyLayout(DEFAULT_LAYOUT_CONFIG);
   };
@@ -40,12 +43,22 @@ export function LayoutControls({ onApplyLayout }: LayoutControlsProps) {
       ...DEFAULT_LAYOUT_CONFIG,
       nodeSpacing: 150,
       rankSpacing: 200,
+      horizontalSpacing: 150,
+      verticalSpacing: 200,
+      margin: 20,
+      alignRanks: true,
+      centerGraph: true,
       compact: true,
     },
     spacious: {
       ...DEFAULT_LAYOUT_CONFIG,
-      nodeSpacing: 300,
-      rankSpacing: 350,
+      nodeSpacing: 400,
+      rankSpacing: 450,
+      horizontalSpacing: 400,
+      verticalSpacing: 450,
+      margin: 50,
+      alignRanks: true,
+      centerGraph: true,
       compact: false,
     },
     horizontal: {
@@ -53,6 +66,11 @@ export function LayoutControls({ onApplyLayout }: LayoutControlsProps) {
       direction: "LR" as const,
       nodeSpacing: 200,
       rankSpacing: 300,
+      horizontalSpacing: 300,
+      verticalSpacing: 200,
+      margin: 30,
+      alignRanks: true,
+      centerGraph: true,
     },
   };
 
@@ -62,37 +80,41 @@ export function LayoutControls({ onApplyLayout }: LayoutControlsProps) {
   };
 
   return (
-    <div className="absolute bottom-4 left-4 z-50 bg-[hsl(var(--card))]/90 backdrop-blur-sm rounded-lg shadow-lg border border-[hsl(var(--border))]">
-      <button
+    <div className="absolute bottom-4 left-4 z-50 bg-card backdrop-blur-sm rounded-lg shadow-lg border border-border">
+      <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 px-3 py-2 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded-lg hover:bg-[hsl(var(--primary))/90] text-sm font-medium transition-colors w-full"
+        className="w-full rounded-b-none"
+        variant="default"
       >
         {isOpen ? "Hide Layout Controls" : "Layout Controls"}
-      </button>
+      </Button>
 
       {isOpen && (
         <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
           <div className="space-y-2">
             <h3 className="text-sm font-medium">Presets</h3>
             <div className="flex gap-2">
-              <button
+              <Button
                 onClick={() => applyPreset("compact")}
-                className="px-2 py-1 bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] rounded-md hover:bg-[hsl(var(--muted))/80] text-xs"
+                variant="outline"
+                size="sm"
               >
                 Compact
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => applyPreset("spacious")}
-                className="px-2 py-1 bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] rounded-md hover:bg-[hsl(var(--muted))/80] text-xs"
+                variant="outline"
+                size="sm"
               >
                 Spacious
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => applyPreset("horizontal")}
-                className="px-2 py-1 bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] rounded-md hover:bg-[hsl(var(--muted))/80] text-xs"
+                variant="outline"
+                size="sm"
               >
                 Horizontal
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -133,42 +155,35 @@ export function LayoutControls({ onApplyLayout }: LayoutControlsProps) {
           <div className="space-y-2">
             <h3 className="text-sm font-medium">Direction</h3>
             <div className="grid grid-cols-2 gap-2">
-              <button
+              <Button
                 onClick={() => handleChange("direction", "TB")}
-                className={
-                  config.direction === "TB"
-                    ? "px-2 py-1 rounded-md text-xs bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
-                    : "px-2 py-1 rounded-md text-xs bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"
-                }
+                variant={config.direction === "TB" ? "default" : "outline"}
+                size="sm"
               >
                 Top to Bottom
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => handleChange("direction", "LR")}
-                className={
-                  config.direction === "LR"
-                    ? "px-2 py-1 rounded-md text-xs bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
-                    : "px-2 py-1 rounded-md text-xs bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"
-                }
+                variant={config.direction === "LR" ? "default" : "outline"}
+                size="sm"
               >
                 Left to Right
-              </button>
+              </Button>
             </div>
           </div>
 
           <div className="flex gap-2 pt-2">
-            <button
-              onClick={handleApply}
-              className="flex-1 px-2 py-1 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded-md hover:bg-[hsl(var(--primary))/90] text-xs font-medium"
-            >
+            <Button onClick={handleApply} className="flex-1" size="sm">
               Apply
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleReset}
-              className="flex-1 px-2 py-1 bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] rounded-md hover:bg-[hsl(var(--muted))/80] text-xs"
+              className="flex-1"
+              variant="outline"
+              size="sm"
             >
               Reset
-            </button>
+            </Button>
           </div>
         </div>
       )}

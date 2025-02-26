@@ -41,6 +41,8 @@ export class DagLayout implements LayoutAlgorithm {
       return [];
     }
 
+    console.log("DagLayout: Calculating layout with config:", config);
+
     // Convert nodes to ranked nodes
     const rankedNodes = nodes.map((node) => ({
       ...node,
@@ -688,10 +690,19 @@ export class DagLayout implements LayoutAlgorithm {
         startX = totalWidth - rankWidth;
       }
 
-      // Assign coordinates to each node in the rank
+      // Assign coordinates to each node in the rank based on direction
       nodesInRank.forEach((node, index) => {
-        const x = startX + index * config.nodeSpacing + config.padding;
-        const y = rank * config.rankSpacing + config.padding;
+        let x, y;
+
+        if (config.direction === "LR") {
+          // Left to Right layout - swap x and y
+          x = rank * config.rankSpacing + config.padding;
+          y = startX + index * config.nodeSpacing + config.padding;
+        } else {
+          // Top to Bottom layout (default)
+          x = startX + index * config.nodeSpacing + config.padding;
+          y = rank * config.rankSpacing + config.padding;
+        }
 
         node.position = { x, y };
       });
@@ -717,9 +728,24 @@ export class DagLayout implements LayoutAlgorithm {
     // Sort ranks
     const ranks = Array.from(rankGroups.keys()).sort((a, b) => a - b);
 
+    // Calculate spacing based on config
+    // For compact layout, use smaller spacing values
+    const nodeSpacingFactor = config.compact ? 0.5 : 1.0;
+    const rankSpacingFactor = config.compact ? 0.6 : 1.0;
+
     // Ensure minimum spacing between nodes
-    const minNodeSpacing = config.nodeSize.width + config.nodeSpacing / 2;
-    const minRankSpacing = config.nodeSize.minHeight + config.rankSpacing;
+    const minNodeSpacing =
+      config.nodeSize.width + config.nodeSpacing * nodeSpacingFactor;
+    const minRankSpacing =
+      config.nodeSize.minHeight + config.rankSpacing * rankSpacingFactor;
+
+    console.log("Compacting layout with spacing:", {
+      minNodeSpacing,
+      minRankSpacing,
+      compact: config.compact,
+      nodeSpacing: config.nodeSpacing,
+      rankSpacing: config.rankSpacing,
+    });
 
     // Compact each rank horizontally with proper spacing
     ranks.forEach((rank) => {

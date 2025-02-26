@@ -51,6 +51,7 @@ export interface WorkflowProcessorHookResult {
   onNodesChange: (changes: import("reactflow").NodeChange[]) => void;
   onEdgesChange: (changes: import("reactflow").EdgeChange[]) => void;
   clearWorkflow: () => void;
+  updateLayoutConfig: (config: import("../shared/types").LayoutConfig) => void;
 }
 
 export interface WorkflowExportHookResult {

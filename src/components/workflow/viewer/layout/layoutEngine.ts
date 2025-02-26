@@ -66,6 +66,7 @@ export class LayoutEngine {
    * @returns The nodes with updated positions
    */
   applyLayout(nodes: Node[], edges: Edge[]): Node[] {
+    console.log("LayoutEngine: Applying layout with config:", this.config);
     return this.algorithm.calculateLayout(nodes, edges, this.config);
   }
 
@@ -86,8 +87,8 @@ export class LayoutEngine {
     let maxY = -Infinity;
 
     nodes.forEach((node) => {
-      const width = node.width || this.config.nodeSize.width;
-      const height = node.height || this.config.nodeSize.minHeight;
+      const width = node.width || this.config.nodeSize?.width || 250;
+      const height = node.height || this.config.nodeSize?.minHeight || 100;
 
       minX = Math.min(minX, node.position.x);
       minY = Math.min(minY, node.position.y);
@@ -100,14 +101,14 @@ export class LayoutEngine {
     const centerY = (minY + maxY) / 2;
 
     // Calculate the zoom level to fit all nodes
-    const width = maxX - minX + this.config.padding * 2;
-    const height = maxY - minY + this.config.padding * 2;
+    const width = maxX - minX + (this.config.padding || 50) * 2;
+    const height = maxY - minY + (this.config.padding || 50) * 2;
     const zoom = Math.min(
       1,
       Math.min(
-        this.config.viewport.maxZoom,
+        this.config.viewport?.maxZoom || 1.2,
         Math.max(
-          this.config.viewport.minZoom,
+          this.config.viewport?.minZoom || 0.4,
           Math.min(window.innerWidth / width, window.innerHeight / height)
         )
       )

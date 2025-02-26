@@ -33,6 +33,9 @@ interface WorkflowCanvasProps {
   onEdgesChange: (changes: EdgeChange[]) => void;
   onExportSvg: (reactFlowInstance: ReactFlowInstance | null) => void;
   onClearWorkflow: () => void;
+  updateLayoutConfig?: (
+    config: import("../../shared/types").LayoutConfig
+  ) => void;
 }
 
 /**
@@ -47,6 +50,7 @@ export function WorkflowCanvas({
   onEdgesChange,
   onExportSvg,
   onClearWorkflow,
+  updateLayoutConfig,
 }: WorkflowCanvasProps) {
   // Reference to the ReactFlow instance
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
@@ -98,6 +102,7 @@ export function WorkflowCanvas({
 
   // Handle auto-layout button click
   const handleAutoLayoutClick = useCallback(() => {
+    console.log("Auto layout button clicked");
     applyLayout();
   }, [applyLayout]);
 
@@ -140,7 +145,16 @@ export function WorkflowCanvas({
         />
 
         {/* Layout controls component */}
-        <LayoutControls onApplyLayout={applyLayout} />
+        <LayoutControls
+          onApplyLayout={(config) => {
+            console.log("Layout controls applying config:", config);
+            if (updateLayoutConfig) {
+              updateLayoutConfig(config);
+            } else {
+              applyLayout(config);
+            }
+          }}
+        />
 
         <Panel position="top-right" className="flex gap-2 mt-16">
           <button

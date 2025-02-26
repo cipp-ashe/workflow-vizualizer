@@ -46,8 +46,18 @@ export function WorkflowViewer({ template }: WorkflowViewerProps) {
   } = useWorkflowNavigation(template);
 
   // Workflow processing state and handlers
-  const { nodes, edges, onNodesChange, onEdgesChange, clearWorkflow } =
-    useWorkflowProcessor(template, selectedWorkflowId, handleSubWorkflowClick);
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    clearWorkflow,
+    updateLayoutConfig,
+  } = useWorkflowProcessor(
+    template,
+    selectedWorkflowId,
+    handleSubWorkflowClick
+  );
 
   // Export functionality
   const { downloadAsSvg } = useWorkflowExport();
@@ -98,6 +108,7 @@ export function WorkflowViewer({ template }: WorkflowViewerProps) {
           onEdgesChange={onEdgesChange}
           onExportSvg={downloadAsSvg}
           onClearWorkflow={clearWorkflow}
+          updateLayoutConfig={updateLayoutConfig}
         />
       </ReactFlowProvider>
     </div>

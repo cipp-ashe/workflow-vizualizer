@@ -72,8 +72,21 @@ export function useWorkflowLayout({
           // Apply layout to nodes
           const positionedNodes = currentLayoutEngine.applyLayout(nodes, edges);
 
-          // Update node positions
-          reactFlowInstanceRef.current.setNodes(positionedNodes);
+          // Update node positions with animation
+          const updatedNodes = nodes.map((node) => {
+            const positionedNode = positionedNodes.find(
+              (n) => n.id === node.id
+            );
+            if (positionedNode) {
+              return {
+                ...node,
+                position: positionedNode.position,
+              };
+            }
+            return node;
+          });
+
+          reactFlowInstanceRef.current.setNodes(updatedNodes);
 
           // Fit view to ensure all nodes are visible
           setTimeout(() => {

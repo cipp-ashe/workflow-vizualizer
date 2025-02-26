@@ -1,7 +1,7 @@
 /**
  * Hook for processing workflow data into nodes and edges
  */
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Node, Edge, useNodesState, useEdgesState } from "reactflow";
 import { WorkflowBundle, Task } from "../../../../types/workflow";
 import { WorkflowTask } from "../../shared/types";
@@ -30,13 +30,15 @@ export function useWorkflowProcessor(
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
+  // State for layout config
+  const [layoutConfig, setLayoutConfig] = useState(
+    DEFAULT_LAYOUT_CONFIG as unknown as import("../../shared/types").LayoutConfig
+  );
+
   // Layout engine for positioning nodes
   const layoutEngine = useMemo(() => {
-    return new LayoutEngine(
-      new DagLayout(),
-      DEFAULT_LAYOUT_CONFIG as unknown as import("../../shared/types").LayoutConfig
-    );
-  }, []);
+    return new LayoutEngine(new DagLayout(), layoutConfig);
+  }, [layoutConfig]);
 
   /**
    * Process workflow data into nodes and edges
@@ -252,6 +254,24 @@ export function useWorkflowProcessor(
     setEdges([]);
   }, [setNodes, setEdges]);
 
+  /**
+   * Update the layout configuration and reapply layout
+   */
+  const updateLayoutConfig = useCallback(
+    (config: import("../../shared/types").LayoutConfig) => {
+      console.log("Updating layout config:", config);
+      setLayoutConfig(config);
+
+      // Reapply layout with the new configuration if there are nodes
+      if (nodes.length > 0) {
+        const updatedLayoutEngine = new LayoutEngine(new DagLayout(), config);
+        const positionedNodes = updatedLayoutEngine.applyLayout(nodes, edges);
+        setNodes(positionedNodes);
+      }
+    },
+    [nodes, edges, setNodes]
+  );
+
   // Process workflow when template or selected workflow changes
   useEffect(() => {
     processWorkflow();
@@ -263,5 +283,6 @@ export function useWorkflowProcessor(
     onNodesChange,
     onEdgesChange,
     clearWorkflow,
+    updateLayoutConfig,
   };
 }

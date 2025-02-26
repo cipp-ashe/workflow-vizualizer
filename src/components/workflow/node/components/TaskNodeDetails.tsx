@@ -139,7 +139,7 @@ const Field = ({ label, value }: { label: string; value: ReactNode }) => (
     <div className="font-medium text-xs text-[hsl(var(--muted-foreground))] mb-1">
       {label}
     </div>
-    <div className="text-[hsl(var(--foreground))]">{value}</div>
+    <div className="text-[hsl(var(--foreground))] break-words">{value}</div>
   </div>
 );
 
@@ -382,7 +382,7 @@ const TaskMetadata: React.FC<TaskMetadataProps> = ({ data }) => {
         <Field
           label="Action"
           value={
-            <span>
+            <span className="break-words">
               {String(data.action.id)}
               {data.action.ref && (
                 <span className="text-[hsl(var(--muted-foreground))]">
@@ -406,19 +406,45 @@ interface TaskConfigurationProps {
 }
 
 const TaskConfiguration: React.FC<TaskConfigurationProps> = ({ data }) => {
+  // Filter out undefined/null configuration values
+  const hasTransitionMode =
+    data.transitionMode !== undefined && data.transitionMode !== null;
+  const hasPublishResultAs =
+    data.publishResultAs !== undefined && data.publishResultAs !== null;
+  const hasHumanSecondsSaved =
+    data.humanSecondsSaved !== undefined && data.humanSecondsSaved !== null;
+  const hasJoin = data.join !== undefined && data.join !== null;
+  const hasRunAsOrgId =
+    data.runAsOrgId !== undefined && data.runAsOrgId !== null;
+
+  // If no configuration values exist, return null
+  if (
+    !hasTransitionMode &&
+    !hasPublishResultAs &&
+    !hasHumanSecondsSaved &&
+    !hasJoin &&
+    !hasRunAsOrgId
+  ) {
+    return (
+      <div className="text-xs text-[hsl(var(--muted-foreground))]">
+        No configuration parameters available
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       {/* Left column */}
       <div className="space-y-3">
-        {data.transitionMode && (
+        {hasTransitionMode && (
           <Field label="Transition Mode" value={data.transitionMode} />
         )}
 
-        {data.publishResultAs && (
+        {hasPublishResultAs && (
           <Field label="Publish Result As" value={data.publishResultAs} />
         )}
 
-        {typeof data.humanSecondsSaved !== "undefined" && (
+        {hasHumanSecondsSaved && (
           <Field
             label="Human Time Saved"
             value={<>{`${data.humanSecondsSaved} seconds`}</>}
@@ -428,7 +454,7 @@ const TaskConfiguration: React.FC<TaskConfigurationProps> = ({ data }) => {
 
       {/* Right column */}
       <div className="space-y-3">
-        {typeof data.join !== "undefined" && (
+        {hasJoin && (
           <Field
             label="Join"
             value={
@@ -442,7 +468,7 @@ const TaskConfiguration: React.FC<TaskConfigurationProps> = ({ data }) => {
           />
         )}
 
-        {data.runAsOrgId && (
+        {hasRunAsOrgId && (
           <Field
             label="Run As Organization"
             value={
@@ -466,7 +492,24 @@ interface InputParametersProps {
 
 const InputParameters: React.FC<InputParametersProps> = ({ input }) => {
   if (!input || Object.keys(input).length === 0) {
-    return null;
+    return (
+      <div className="text-xs text-[hsl(var(--muted-foreground))]">
+        No input parameters available
+      </div>
+    );
+  }
+
+  // Filter out null and undefined values
+  const filteredInput = Object.entries(input).filter(
+    ([, value]) => value !== null && value !== undefined
+  );
+
+  if (filteredInput.length === 0) {
+    return (
+      <div className="text-xs text-[hsl(var(--muted-foreground))]">
+        No non-null input parameters available
+      </div>
+    );
   }
 
   return (
@@ -476,16 +519,19 @@ const InputParameters: React.FC<InputParametersProps> = ({ input }) => {
       </div>
       <div className="border border-[hsl(var(--border))] rounded bg-[hsl(var(--muted)/0.3)] p-2 max-h-40 overflow-y-auto">
         <div className="space-y-1">
-          {Object.entries(input).map(([key, value]) => {
+          {filteredInput.map(([key, value]) => {
             // Convert value to string first to avoid ReactNode type errors
             const displayValue = safeToString(value);
 
             return (
-              <div key={key} className="grid grid-cols-[auto_1fr] gap-2">
+              <div
+                key={key}
+                className="grid grid-cols-[minmax(auto,30%)_1fr] gap-2"
+              >
                 <span className="font-medium text-xs whitespace-nowrap">
                   {key}:
                 </span>
-                <span className="text-[hsl(var(--muted-foreground))] text-xs overflow-x-auto whitespace-nowrap">
+                <span className="text-[hsl(var(--muted-foreground))] text-xs overflow-x-auto break-words whitespace-normal">
                   {displayValue}
                 </span>
               </div>
@@ -506,7 +552,11 @@ interface TransitionsListProps {
 
 const TransitionsList: React.FC<TransitionsListProps> = ({ data }) => {
   if (!data.next || data.next.length === 0) {
-    return null;
+    return (
+      <div className="text-xs text-[hsl(var(--muted-foreground))]">
+        No transitions available
+      </div>
+    );
   }
 
   return (
@@ -547,7 +597,11 @@ const AdvancedConfiguration: React.FC<AdvancedConfigurationProps> = ({
         Object.keys(data.mockInput.mock_result).length > 0));
 
   if (!hasAdvancedConfig) {
-    return null;
+    return (
+      <div className="text-xs text-[hsl(var(--muted-foreground))]">
+        No advanced configuration available
+      </div>
+    );
   }
 
   return (
@@ -564,7 +618,7 @@ const AdvancedConfiguration: React.FC<AdvancedConfigurationProps> = ({
             <div>
               <div className="text-xs font-medium mb-1">Mock Input</div>
               <div className="text-[hsl(var(--foreground))] rounded bg-[hsl(var(--muted))] p-2 max-h-40 overflow-y-auto">
-                <pre className="text-xs whitespace-pre-wrap overflow-x-auto">
+                <pre className="text-xs whitespace-pre-wrap overflow-x-auto break-words">
                   {JSON.stringify(data.mockInput, null, 2)}
                 </pre>
               </div>
@@ -608,7 +662,7 @@ export function TaskNodeDetails({
         onClick={(e) => e.stopPropagation()}
       >
         <TabsList
-          className="w-full justify-start"
+          className="w-full justify-start flex-wrap"
           onClick={(e) => e.stopPropagation()}
         >
           <TabsTrigger value="config" onClick={(e) => e.stopPropagation()}>
